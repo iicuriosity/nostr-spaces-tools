@@ -1,0 +1,30 @@
+{
+  "name": "nostr-spaces-tools",
+  "version": "0.1.0",
+  "description": "An Innovative framework for decentralized, real-time audio communication. This package uses WebRTC & Nostr for secure, scalable P2P connections. Ideal for allowing nostr client devs to add Twitter/X like audio spaces features.",
+  "main": "index.js",
+  "dependencies": {
+    "nostr-tools": "^2.1.5",
+    "typescript": "^5.0.2",
+    "web-vitals": "^2.1.4"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ilmaoun/nostr-spaces-tools.git"
+  },
+  "keywords": [
+    "Nostr",
+    "Spaces",
+    "WebRTC",
+    "Audio"
+  ],
+  "author": "ILIAS IL MAOUN",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ilmaoun/nostr-spaces-tools/issues"
+  },
+  "homepage": "https://github.com/ilmaoun/nostr-spaces-tools#readme"
+}
