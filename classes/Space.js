@@ -1,5 +1,5 @@
-import { Peer } from './Peer.js';
-import { CollaborationGraph } from './CollaborationGraph.js';
+import { Peer } from "./Peer.js";
+import { CollaborationGraph } from "./CollaborationGraph.js";
 export class Space {
   constructor(
     id,
@@ -15,10 +15,18 @@ export class Space {
     onAudioClientConnection,
     onAudioClientConnectionClosing,
     iceServers,
-    onNewPeer
+    onNewPeer,
+    requestConnectionToPeer,
+    sendIceCandidateToRemotePeer,
+    sendAnswer,
+    sendOffer
   ) {
+    this.requestConnectionToPeer = requestConnectionToPeer;
+    this.sendIceCandidateToRemotePeer = sendIceCandidateToRemotePeer;
     this.onAudioClientConnection = onAudioClientConnection;
     this.onAudioClientConnectionClosing = onAudioClientConnectionClosing;
+    this.sendAnswer = sendAnswer;
+    this.sendOffer = sendOffer;
     this.iceServers = iceServers;
     this.onNewPeer = onNewPeer;
     this.id = id;
@@ -32,7 +40,7 @@ export class Space {
     this.distanceScoreWeight = distanceScoreWeight;
     this.speedScoreWeight = speedScoreWeight;
     this.loadScoreWeight = loadScoreWeight;
-    this.collaborationGraph = new CollaborationGraph(
+    /*this.collaborationGraph = new CollaborationGraph(
       host,
       me,
       optimumUploadSpeedKbps,
@@ -40,13 +48,14 @@ export class Space {
       distanceScoreWeight,
       speedScoreWeight,
       loadScoreWeight
-    );
+    );*/
     //this.peers = [];
-    this.state = 'open';
+    this.state = "open";
     this.subscriptionClosers = [];
   }
 
   prepareSpace() {
+    // TODO raise exception if host or me are empty
     this.collaborationGraph = new CollaborationGraph(
       this.host,
       this.me,
@@ -62,7 +71,7 @@ export class Space {
     const node = this.collaborationGraph.fetchBestFit();
     if (node) {
       node.initConnection();
-      node.createOffer();
+      node.reserveConnection();
     }
     // TODO: handle the case where there is no bestFit
   }
@@ -84,12 +93,12 @@ export class Space {
   }
 
   endSpace() {
-    this.state = 'closed';
+    this.state = "closed";
     this.leave();
   }
 
   leave() {
-    this.collaborationGraph.getConnectedNodes().forEach(node => {
+    this.collaborationGraph.getConnectedNodes().forEach((node) => {
       node.closeChannel();
       node.closeSubscriptions();
     });
@@ -97,17 +106,7 @@ export class Space {
   }
 
   //addNode(node)
-  addNode(
-    name,
-    publicKey,
-    isHost,
-    isCoHost,
-    isSpeaker,
-    networkMetrics,
-    sendIceCandidateToRemotePeer,
-    sendAnswer,
-    sendOffer
-  ) {
+  addNode(name, publicKey, isHost, isCoHost, isSpeaker, networkMetrics) {
     const node = new Peer(
       this,
       name,
@@ -116,9 +115,10 @@ export class Space {
       isCoHost,
       isSpeaker,
       networkMetrics,
-      sendIceCandidateToRemotePeer,
-      sendAnswer,
-      sendOffer,
+      this.requestConnectionToPeer,
+      this.sendIceCandidateToRemotePeer,
+      this.sendAnswer,
+      this.sendOffer,
       this.onAudioClientConnection,
       this.onAudioClientConnectionClosing,
       this.iceServers
@@ -128,7 +128,7 @@ export class Space {
     if (
       insertedNode.isCoHost &&
       !this.coHosts.includes(
-        cohost => cohost.publicKey === insertedNode.publicKey
+        (cohost) => cohost.publicKey === insertedNode.publicKey
       )
     )
       this.coHosts.push(insertedNode);
@@ -153,12 +153,12 @@ export class Space {
   }
 
   acceptPeerConnection(peer, type, state) {
-    this.addConnection(node1, node2, type, 'accepted');
+    this.addConnection(node1, node2, type, "accepted");
     peer.initConnection();
   }
 
   closeSubscriptions() {
-    this.subscriptionClosers.forEach(subCloser => subCloser.close());
+    this.subscriptionClosers.forEach((subCloser) => subCloser.close());
     this.subscriptionClosers = [];
   }
 }

@@ -174,9 +174,9 @@ class NostrChannel {
           const space = new Space(
             id,
             name,
-            host,
+            null,
             this.profile,
-            coHosts,
+            [],
             null,
             null,
             null,
@@ -185,7 +185,19 @@ class NostrChannel {
             onAudioClientConnection,
             onAudioClientConnectionClosing,
             iceServers,
-            onNewPeer
+            onNewPeer,
+            this.reserveConnection.bind(this),
+            this.sendIceCandidateToRemotePeer.bind(this),
+            this.sendAnswer.bind(this),
+            this.sendOffer.bind(this)
+          );
+          space.addNode(
+            host.name,
+            host.publicKey,
+            true,
+            false,
+            false,
+            host.networkMetrics
           );
           onNewSpace(space);
         },
@@ -259,7 +271,11 @@ class NostrChannel {
           onAudioClientConnection,
           onAudioClientConnectionClosing,
           iceServers,
-          onNewPeer
+          onNewPeer,
+          this.reserveConnection.bind(this),
+          this.sendIceCandidateToRemotePeer.bind(this),
+          this.sendAnswer.bind(this),
+          this.sendOffer.bind(this)
         );
         space.addNode(
           createSpaceEvent.host.name,
@@ -267,10 +283,7 @@ class NostrChannel {
           true,
           false,
           false,
-          createSpaceEvent.host.networkMetrics,
-          this.sendIceCandidateToRemotePeer.bind(this),
-          this.sendAnswer.bind(this),
-          this.sendOffer.bind(this)
+          createSpaceEvent.host.networkMetrics
         );
         activeSpaces.push(space);
       }
@@ -321,10 +334,7 @@ class NostrChannel {
             false,
             false,
             false,
-            networkMetrics,
-            this.sendIceCandidateToRemotePeer.bind(this),
-            this.sendAnswer.bind(this),
-            this.sendOffer.bind(this)
+            networkMetrics
           );
           this.subscribeLeaveSpaceEvent(peer);
           /*if (event.pubkey === this.profile.publicKey)
@@ -369,14 +379,12 @@ class NostrChannel {
       ],
     });
     for (const event of joinSpaceEvents) {
-      const spaceId = event.tags.find((tag) => tag[0] === TAGS.SPACE)?.[1];
       const peerLeftSpace = leaveSpaceEvents.includes(
         (leaveEvent) =>
-          leaveEvent.tags.find((tag) => tag[0] === TAGS.SPACE)?.[1] ===
-            spaceId && leaveEvent.created_at > event.created_at
+          event.pubkey === leaveEvent.pubkey &&
+          leaveEvent.created_at > event.created_at
       );
       if (peerLeftSpace) continue;
-      // TODO add peer to the space
       const { networkMetrics } = JSON.parse(event.content);
       const peer = space.addNode(
         event.pubkey,
@@ -384,10 +392,7 @@ class NostrChannel {
         false,
         false,
         false,
-        networkMetrics,
-        this.sendIceCandidateToRemotePeer.bind(this),
-        this.sendAnswer.bind(this),
-        this.sendOffer.bind(this)
+        networkMetrics
       );
       this.subscribeLeaveSpaceEvent(peer);
     }
@@ -417,28 +422,26 @@ class NostrChannel {
         },
       ],
     });
-    for (const event of joinSpaceEvents) {
-      const spaceId = event.tags.find((tag) => tag[0] === TAGS.SPACE)?.[1];
-      const peerLeftSpace = leaveSpaceEvents.includes(
-        (leaveEvent) =>
-          leaveEvent.tags.find((tag) => tag[0] === TAGS.SPACE)?.[1] ===
-            spaceId && leaveEvent.created_at > event.created_at
+    for (const event of peerConnectionEvents) {
+      const peerId = event.tags.find((tag) => tag[0] === TAGS.PEER)?.[1];
+      const peerConnectionDropped = dropConnectionEvents.includes(
+        (dropConnectionEvent) =>
+          ((dropConnectionEvent.tags.find(
+            (tag) => tag[0] === TAGS.PEER
+          )?.[1] === peerId &&
+            event.pubkey === dropConnectionEvent.pubkey) ||
+            (dropConnectionEvent.tags.find(
+              (tag) => tag[0] === TAGS.PEER
+            )?.[1] === dropConnectionEvent.pubkey &&
+              event.pubkey === peerId)) &&
+          dropConnectionEvent.created_at > event.created_at
       );
-      if (peerLeftSpace) continue;
-      // TODO add peer to the space
-      const { networkMetrics } = JSON.parse(event.content);
-      const peer = space.addNode(
-        event.pubkey,
-        event.pubkey,
-        false,
-        false,
-        false,
-        networkMetrics,
-        this.sendIceCandidateToRemotePeer.bind(this),
-        this.sendAnswer.bind(this),
-        this.sendOffer.bind(this)
-      );
-      this.subscribeLeaveSpaceEvent(peer);
+      if (peerConnectionDropped) continue;
+      const { type, networkMetrics } = JSON.parse(event.content);
+      const node2 = getNode(event.pubkey);
+      const node1 = getNode(peerId);
+      if (!node1 || !node2) continue;
+      space.addConnection(node1, node2, type, "confirmed");
     }
   }
 
@@ -446,12 +449,11 @@ class NostrChannel {
     space.prepareSpace();
     this.subscribeNewPeerEvent(space);
     this._fetchPeers(space);
-
     this.subscribeConfirmConnection(space);
     this.subscribeDropConnection(space);
     this.subscribeReserveConnection(space);
-    // TODO load connections fetch confirm connection events
     this._fetchPeerConnections(space);
+    space.joinSpace();
   }
 
   subscribeReserveConnection(space) {
