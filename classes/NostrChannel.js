@@ -1,25 +1,26 @@
 /**
  * NostrChannel is a singleton class that handles the communication
  */
-import { Peer } from "./Peer";
-import { Space } from "./Space";
-import { extractNetworkMetrics } from "../utility/NetworkMetricsExtractor";
+import { Peer } from './Peer';
+import { Space } from './Space';
+import { extractNetworkMetrics } from '../utility/NetworkMetricsExtractor';
 import {
   SimplePool,
   Event,
   generateSecretKey,
   getPublicKey,
   finalizeEvent,
-} from "nostr-tools";
+} from 'nostr-tools';
 
 const TAGS = {
-  SPACE: "s",
-  PEER: "p",
-  RTC_APP: "webrtc",
-  D: "d",
+  SPACE: 's',
+  CREATOR: 'c',
+  PEER: 'p',
+  RTC_APP: 'webrtc',
+  D: 'd',
 };
 
-const SPACES_APP = "spaces";
+const SPACES_APP = 'spaces';
 
 const EVENT_KINDS = {
   CREATE_SPACE: 1000, // This event is triggered by a Host when they create a new space
@@ -59,8 +60,12 @@ class NostrChannel {
     this.subscriptionClosers = [];
   }
 
+  isOpen() {
+    return this.relays && this.profile;
+  }
+
   _verifyChannelSetup() {
-    if (!(this.relays && this.profile))
+    if (!this.isOpen())
       throw new Error(
         "Access to this functionality isn't available until the user is connected."
       );
@@ -167,7 +172,7 @@ class NostrChannel {
     //this._verifyChannelSetup();
     this.subscriptionClosers.push(
       this._subscribe({
-        onevent: (event) => {
+        onevent: event => {
           // TODO:: Read content And construct the event.
           const { id, name, host, coHosts } = JSON.parse(event.content);
           if (event.pubkey !== host.publicKey) return;
@@ -236,12 +241,13 @@ class NostrChannel {
 
     const activeSpaces = [];
     for (const event of creationEvents) {
-      const spaceId = event.tags.find((tag) => tag[0] === TAGS.SPACE)?.[1];
+      const spaceId = event.tags.find(tag => tag[0] === TAGS.SPACE)?.[1];
 
       // Check for a CLOSE_SPACE event for each space ID
       const closeEvents = await this._queryEvents({
         filters: [
           {
+            authors: [event.pubkey],
             kinds: [EVENT_KINDS.CLOSE_SPACE],
             tags: [
               [TAGS.SPACE, spaceId],
@@ -255,7 +261,7 @@ class NostrChannel {
       const createSpaceEvent = JSON.parse(event.content);
       if (
         closeEvents.length === 0 &&
-        createSpaceEvent.host !== this.profile.publicKey
+        createSpaceEvent.host.publicKey !== this.profile.publicKey
       ) {
         const space = new Space(
           id,
@@ -300,7 +306,7 @@ class NostrChannel {
     //this._verifyChannelSetup();
     space.addSubscriptionCloser(
       this._subscribe({
-        onevent: (event) => {
+        onevent: event => {
           space.leave();
           if (onClose) onClose(space);
         },
@@ -326,7 +332,7 @@ class NostrChannel {
     //this._verifyChannelSetup();
     space.addSubscriptionCloser(
       this._subscribe({
-        onevent: (event) => {
+        onevent: event => {
           const { networkMetrics } = JSON.parse(event.content);
           const peer = space.addNode(
             event.pubkey,
@@ -337,8 +343,6 @@ class NostrChannel {
             networkMetrics
           );
           this.subscribeLeaveSpaceEvent(peer);
-          /*if (event.pubkey === this.profile.publicKey)
-            this.startConnectionProcess(space);*/
           //onNewPeer(peer);
         },
         filters: [
@@ -380,7 +384,7 @@ class NostrChannel {
     });
     for (const event of joinSpaceEvents) {
       const peerLeftSpace = leaveSpaceEvents.includes(
-        (leaveEvent) =>
+        leaveEvent =>
           event.pubkey === leaveEvent.pubkey &&
           leaveEvent.created_at > event.created_at
       );
@@ -423,16 +427,14 @@ class NostrChannel {
       ],
     });
     for (const event of peerConnectionEvents) {
-      const peerId = event.tags.find((tag) => tag[0] === TAGS.PEER)?.[1];
+      const peerId = event.tags.find(tag => tag[0] === TAGS.PEER)?.[1];
       const peerConnectionDropped = dropConnectionEvents.includes(
-        (dropConnectionEvent) =>
-          ((dropConnectionEvent.tags.find(
-            (tag) => tag[0] === TAGS.PEER
-          )?.[1] === peerId &&
+        dropConnectionEvent =>
+          ((dropConnectionEvent.tags.find(tag => tag[0] === TAGS.PEER)?.[1] ===
+            peerId &&
             event.pubkey === dropConnectionEvent.pubkey) ||
-            (dropConnectionEvent.tags.find(
-              (tag) => tag[0] === TAGS.PEER
-            )?.[1] === dropConnectionEvent.pubkey &&
+            (dropConnectionEvent.tags.find(tag => tag[0] === TAGS.PEER)?.[1] ===
+              dropConnectionEvent.pubkey &&
               event.pubkey === peerId)) &&
           dropConnectionEvent.created_at > event.created_at
       );
@@ -441,7 +443,7 @@ class NostrChannel {
       const node2 = getNode(event.pubkey);
       const node1 = getNode(peerId);
       if (!node1 || !node2) continue;
-      space.addConnection(node1, node2, type, "confirmed");
+      space.addConnection(node1, node2, type, 'confirmed');
     }
   }
 
@@ -460,7 +462,7 @@ class NostrChannel {
     //this._verifyChannelSetup();
     space.addSubscriptionCloser(
       this._subscribe({
-        onevent: (event) => {
+        onevent: event => {
           const { type, networkMetrics } = JSON.parse(event.content);
           const node1 = getNode(event.pubkey);
           const node2 = getNode(this.profile.publicKey);
@@ -473,7 +475,7 @@ class NostrChannel {
               space.disconnectPeer(nodeToReplace);
               this.dropConnection(nodeToReplace);
             }
-            space.acceptPeerConnection(node1, type, "accepted");
+            space.acceptPeerConnection(node1, type, 'accepted');
             this.subscribeOffer(node1);
             this.subscribeIceCandidateFromRemotePeer(node1);
             this.confirmConnection(node1, type);
@@ -518,7 +520,7 @@ class NostrChannel {
       [TAGS.PEER, peer.publicKey],
       [TAGS.SPACE, peer.space.id],
       [TAGS.RTC_APP, SPACES_APP],
-      [TAGS.D, peer.space.id + "||" + peer.publicKey],
+      [TAGS.D, peer.space.id + '||' + peer.publicKey],
     ]);
   }
 
@@ -535,7 +537,7 @@ class NostrChannel {
         [TAGS.PEER, peer.publicKey],
         [TAGS.SPACE, peer.space.id],
         [TAGS.RTC_APP, SPACES_APP],
-        [TAGS.D, peer.space.id + "||" + peer.publicKey],
+        [TAGS.D, peer.space.id + '||' + peer.publicKey],
       ], // Tag to direct the message to a specific peer
     };
     await this._sendEvent(event);
@@ -544,9 +546,9 @@ class NostrChannel {
     //this._verifyChannelSetup();
     space.addSubscriptionCloser(
       this._subscribe({
-        onevent: (event) => {
+        onevent: event => {
           const { type, networkMetrics } = JSON.parse(event.content);
-          const peer = event.tags.find((tag) => tag[0] === TAGS.PEER)?.[1];
+          const peer = event.tags.find(tag => tag[0] === TAGS.PEER)?.[1];
           const node2 = getNode(event.pubkey);
           const node1 = getNode(peer);
           if (!node1 || !node2) return;
@@ -558,7 +560,7 @@ class NostrChannel {
             this.subscribeIceCandidateFromRemotePeer(node2);
             node2.createOffer();
           }
-          space.addConnection(node1, node2, type, "confirmed");
+          space.addConnection(node1, node2, type, 'confirmed');
         },
         filters: [
           {
@@ -577,9 +579,9 @@ class NostrChannel {
     //this._verifyChannelSetup();
     space.addSubscriptionCloser(
       this._subscribe({
-        onevent: (event) => {
+        onevent: event => {
           if (event.pubkey === this.profile.publicKey) return;
-          const peer = event.tags.find((tag) => tag[0] === TAGS.PEER)?.[1];
+          const peer = event.tags.find(tag => tag[0] === TAGS.PEER)?.[1];
           const node2 = getNode(event.pubkey);
           const node1 = getNode(peer);
           if (!node1 || !node2) return;
@@ -647,7 +649,7 @@ class NostrChannel {
     peer = peer.space.collaborationGraph.nodes.get(peer.publicKey);
     peer.addSubscriptionCloser(
       this._subscribe({
-        onevent: (event) => {
+        onevent: event => {
           peer.space.removePeer(peer);
         },
         filters: [
@@ -669,7 +671,7 @@ class NostrChannel {
     peer = peer.space.collaborationGraph.nodes.get(peer.publicKey);
     peer.addSubscriptionCloser(
       this._subscribe({
-        onevent: (event) => {
+        onevent: event => {
           const { sdp } = JSON.parse(event.content);
           // todo decrypt the offer using the peer's public key
           peer.acceptOffer(sdp);
@@ -694,7 +696,7 @@ class NostrChannel {
     peer = peer.space.collaborationGraph.nodes.get(peer.publicKey);
     peer.addSubscriptionCloser(
       this._subscribe({
-        onevent: (event) => {
+        onevent: event => {
           const { ice } = JSON.parse(event.content);
           peer.onRemotePeerIceCandidateReceived(ice);
         },
@@ -717,7 +719,7 @@ class NostrChannel {
     peer = peer.space.collaborationGraph.nodes.get(peer.publicKey);
     peer.addSubscriptionCloser(
       this._subscribe({
-        onevent: (event) => {
+        onevent: event => {
           const { sdp } = JSON.parse(event.content);
           // TODO decrypt the offer using the peer's public key
           peer.handleAnswer(sdp);
@@ -753,6 +755,40 @@ class NostrChannel {
     };
     await this._sendEvent(event);
     //this.subscribeNewPeerEvent(space, onNewPeer);
+  }
+
+  async createNewSpace(
+    spaceId,
+    spaceName,
+    onAudioClientConnection,
+    onAudioClientConnectionClosing,
+    iceServers,
+    onNewPeer
+  ) {
+    // Space creation
+    const space = new Space(
+      spaceId,
+      spaceName,
+      this.profile,
+      this.profile,
+      [],
+      null,
+      null,
+      null,
+      null,
+      null,
+      onAudioClientConnection,
+      onAudioClientConnectionClosing,
+      iceServers,
+      onNewPeer,
+      this.reserveConnection.bind(this),
+      this.sendIceCandidateToRemotePeer.bind(this),
+      this.sendAnswer.bind(this),
+      this.sendOffer.bind(this)
+    );
+    startConnectionProcess(space);
+    publishSpace(space);
+    return space;
   }
 }
 

@@ -1,7 +1,7 @@
-import { Peer } from "./Peer";
-import { Space } from "./Space";
-import { NostrChannel } from "./NostrChannel";
-import { CollaborationGraph } from "./CollaborationGraph";
+import { Peer } from "./classes/Peer";
+import { Space } from "./classes/Space";
+import { nostrChannel } from "./classes/NostrChannel";
+import { CollaborationGraph } from "./classes/CollaborationGraph";
 import { extractNetworkMetrics } from "./utility/NetworkMetricsExtractor";
 
-export { Peer, Space, NostrChannel, CollaborationGraph, extractNetworkMetrics };
+export { Peer, Space, nostrChannel, CollaborationGraph, extractNetworkMetrics };

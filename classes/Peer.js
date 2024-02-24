@@ -15,7 +15,7 @@ export class Peer {
     onAudioClientConnectionClosing = () => {},
     iceServers = [
       {
-        urls: "stun:stun.l.google.com:19302",
+        urls: 'stun:stun.l.google.com:19302',
       },
     ]
   ) {
@@ -50,36 +50,37 @@ export class Peer {
       ],*/,
     };
     this.peerConnection = new RTCPeerConnection(configuration);
-    this.peerConnection.onicecandidate = (event) => {
+    this.peerConnection.onicecandidate = event => {
       if (event.candidate) {
         // Send the ICE candidate to the remote peer through the signaling server
         this.sendIceCandidateToRemotePeer(this, event.candidate);
       }
     };
-    this.lastPeerConnectionState = "new"; // Initialize with the default state
-    navigator.mediaDevices
-      .getUserMedia({ audio: true })
-      .then((stream) => {
-        this.localStream = stream; // Set the stream directly to the localStream state
-        stream
-          .getTracks()
-          .forEach((track) => this.peerConnection.addTrack(track, stream));
-      })
-      .catch((error) => console.error("Error accessing media devices.", error));
-    this.peerConnection.addEventListener("connectionstatechange", () => {
+    this.lastPeerConnectionState = 'new'; // Initialize with the default state
+    if (this.isSpeaker || this.isHost || this.isCoHost)
+      navigator.mediaDevices
+        .getUserMedia({ audio: true })
+        .then(stream => {
+          this.localStream = stream; // Set the stream directly to the localStream state
+          stream
+            .getTracks()
+            .forEach(track => this.peerConnection.addTrack(track, stream));
+        })
+        .catch(error => console.error('Error accessing media devices.', error));
+    this.peerConnection.addEventListener('connectionstatechange', () => {
       if (
-        this.lastPeerConnectionState === "new" &&
-        this.peerConnection.connectionState === "connecting" &&
+        this.lastPeerConnectionState === 'new' &&
+        this.peerConnection.connectionState === 'connecting' &&
         clientMember
       ) {
         this.onAudioClientConnection();
         //else if (this.peerConnection.connectionState === 'connected') {
         // Peer is connected, access local media streams
       } else if (
-        ["connected", "disconnected", "failed"].includes(
+        ['connected', 'disconnected', 'failed'].includes(
           this.lastPeerConnectionState
         ) &&
-        this.peerConnection.connectionState === "closed" &&
+        this.peerConnection.connectionState === 'closed' &&
         this.clientPeer
       )
         this.onAudioClientConnectionClosing();
@@ -88,7 +89,7 @@ export class Peer {
   }
 
   onRemotePeerIceCandidateReceived(iceCandidates) {
-    iceCandidates.forEach((candidate) => {
+    iceCandidates.forEach(candidate => {
       // Add each ICE candidate to the peer connection
       this.peerConnection.addIceCandidate(candidate);
     });
@@ -96,29 +97,34 @@ export class Peer {
 
   registerRemoteAudioStreamOutput(playRemoteAudioStream) {
     // Listen for remote stream
-    this.peerConnection.ontrack = (event) => {
+    this.peerConnection.ontrack = event => {
       const [remoteStream] = event.streams;
       playRemoteAudioStream(remoteStream);
+      this.space.broadcastTrack(this, event, remoteStream);
     };
+  }
+
+  transmitTrack(peer, event, remoteStream) {
+    this.peerConnection.addTrack(event.track, remoteStream);
   }
 
   toggleMute() {
     if (this.localStream)
       this.localStream
         .getAudioTracks()
-        .forEach((track) => (track.enabled = !track.enabled));
+        .forEach(track => (track.enabled = !track.enabled));
   }
 
   stopMediaTracks() {
     if (this.localStream)
-      this.localStream.getTracks().forEach((track) => track.stop());
+      this.localStream.getTracks().forEach(track => track.stop());
   }
 
   async handleAnswer(answer) {
     this.clientPeer = false;
     // Set the remote peer's SDP answer as the remote description
     const answerDesc = new RTCSessionDescription({
-      type: "answer",
+      type: 'answer',
       sdp: answer,
     });
     await this.peerConnection.setRemoteDescription(answerDesc);
@@ -127,7 +133,7 @@ export class Peer {
   async acceptOffer(offer) {
     this.clientPeer = true;
     // Set the remote peer's SDP offer as the remote description
-    const offerDesc = new RTCSessionDescription({ type: "offer", sdp: offer });
+    const offerDesc = new RTCSessionDescription({ type: 'offer', sdp: offer });
     await this.peerConnection.setRemoteDescription(offerDesc);
     // Create an SDP answer
     const answer = await this.peerConnection.createAnswer();
@@ -144,7 +150,7 @@ export class Peer {
       // Send the offer to the remote peer through the signaling server
       this.sendOfferToRemotePeer(this, offer.sdp);
     } catch (error) {
-      console.error("Error creating and sending offer:", error);
+      console.error('Error creating and sending offer:', error);
     }
   }
 
@@ -160,16 +166,12 @@ export class Peer {
   }
 
   isConnected() {
-    return this.peerConnection.connectionState === "connected";
+    return this.peerConnection.connectionState === 'connected';
   }
 
   getMaxAudioOutput() {
     //TODO
     return this.networkMetrics.maxAudioOutputs;
-  }
-  getUsedAudioOutputs() {
-    //TODO
-    return this.networkMetrics.usedAudioOutputs;
   }
 
   getUploadSpeedInKbps() {
@@ -181,7 +183,7 @@ export class Peer {
   }
 
   closeSubscriptions() {
-    this.subscriptionClosers.forEach((subCloser) => subCloser.close());
+    this.subscriptionClosers.forEach(subCloser => subCloser.close());
     this.subscriptionClosers = [];
   }
 }

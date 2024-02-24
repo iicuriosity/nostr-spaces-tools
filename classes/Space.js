@@ -1,5 +1,5 @@
-import { Peer } from "./Peer.js";
-import { CollaborationGraph } from "./CollaborationGraph.js";
+import { Peer } from './Peer.js';
+import { CollaborationGraph } from './CollaborationGraph.js';
 export class Space {
   constructor(
     id,
@@ -40,7 +40,7 @@ export class Space {
     this.distanceScoreWeight = distanceScoreWeight;
     this.speedScoreWeight = speedScoreWeight;
     this.loadScoreWeight = loadScoreWeight;
-    /*this.collaborationGraph = new CollaborationGraph(
+    this.collaborationGraph = new CollaborationGraph(
       host,
       me,
       optimumUploadSpeedKbps,
@@ -48,9 +48,9 @@ export class Space {
       distanceScoreWeight,
       speedScoreWeight,
       loadScoreWeight
-    );*/
+    );
     //this.peers = [];
-    this.state = "open";
+    this.state = 'open';
     this.subscriptionClosers = [];
   }
 
@@ -93,12 +93,12 @@ export class Space {
   }
 
   endSpace() {
-    this.state = "closed";
+    this.state = 'closed';
     this.leave();
   }
 
   leave() {
-    this.collaborationGraph.getConnectedNodes().forEach((node) => {
+    this.collaborationGraph.getConnectedNodes().forEach(node => {
       node.closeChannel();
       node.closeSubscriptions();
     });
@@ -128,7 +128,7 @@ export class Space {
     if (
       insertedNode.isCoHost &&
       !this.coHosts.includes(
-        (cohost) => cohost.publicKey === insertedNode.publicKey
+        cohost => cohost.publicKey === insertedNode.publicKey
       )
     )
       this.coHosts.push(insertedNode);
@@ -153,12 +153,18 @@ export class Space {
   }
 
   acceptPeerConnection(peer, type, state) {
-    this.addConnection(node1, node2, type, "accepted");
+    this.addConnection(node1, node2, type, 'accepted');
     peer.initConnection();
   }
 
+  broadcastTrack(node, event, remoteStream) {
+    this.collaborationGraph
+      .getBroadCastNodes()
+      .foreach(peer => peer.transmitTrack(node, event, remoteStream));
+  }
+
   closeSubscriptions() {
-    this.subscriptionClosers.forEach((subCloser) => subCloser.close());
+    this.subscriptionClosers.forEach(subCloser => subCloser.close());
     this.subscriptionClosers = [];
   }
 }

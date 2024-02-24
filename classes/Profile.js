@@ -9,12 +9,7 @@ export class Profile {
   }
 
   getMaxAudioOutput() {
-    //TODO
     return this.networkMetrics.maxAudioOutputs;
-  }
-  getUsedAudioOutputs() {
-    //TODO
-    return this.networkMetrics.usedAudioOutputs;
   }
 
   getUploadSpeedInKbps() {

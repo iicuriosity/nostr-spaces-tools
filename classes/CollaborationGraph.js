@@ -23,9 +23,9 @@ export class CollaborationGraph {
     this.nodes = new Map(); // Key: publicKey, Value: Node instance
     this.connections = []; // Array of Connection instances
     this.host = host;
-    if (host.publicKey === me.publicKey) this.me = host;
+    if (host && host.publicKey === me.publicKey) this.me = host;
     else this.me = me;
-    this.nodes.set(this.host.publicKey, this.host);
+    if (host) this.nodes.set(this.host.publicKey, this.host);
     this.nodes.set(this.me.publicKey, this.me);
     this.refused = [];
     this.optimumUploadSpeedKbps = optimumUploadSpeedKbps;
@@ -36,9 +36,11 @@ export class CollaborationGraph {
   }
 
   addNode(node) {
+    if (!node) return;
     if (this.nodes.has(node.publicKey)) return this.nodes.get(node.publicKey);
     else {
       this.nodes.set(node.publicKey, node);
+      if (node.isHost) this.host = node;
       return node;
     }
   }
@@ -101,11 +103,12 @@ export class CollaborationGraph {
       existingConnection.state = state; // Update state
     } else {
       // Add new connection
+
       this.connections.push(new Connection(node1, node2, type, state));
     }
   }
 
-  myConsumerNodes(node) {
+  myConsumerNode(node) {
     return this.connections.some(
       (conn =>
         conn.node1.publicKey === node.publicKey &&
@@ -113,6 +116,30 @@ export class CollaborationGraph {
         conn.type === CONNECTION_TYPE.CONSUMER) ||
         (conn =>
           conn.node2.publicKey === node.publicKey &&
+          conn.node1.publicKey === this.me.publicKey &&
+          conn.type === CONNECTION_TYPE.PRODUCER)
+    );
+  }
+
+  countConsumerNodes(node) {
+    return this.connections.filter(
+      (conn =>
+        conn.node2.publicKey === node.publicKey &&
+        conn.type === CONNECTION_TYPE.CONSUMER) ||
+        (conn =>
+          conn.node1.publicKey === node.publicKey &&
+          conn.type === CONNECTION_TYPE.PRODUCER)
+    ).length;
+  }
+
+  getBroadCastNodes() {
+    return this.connections.filter(
+      (conn =>
+        !(conn.node1.isSpeaker || conn.node1.isHost || conn.node1.isCoHost) &&
+        conn.node2.publicKey === this.me.publicKey &&
+        conn.type === CONNECTION_TYPE.CONSUMER) ||
+        (conn =>
+          !(conn.node2.isSpeaker || conn.node2.isHost || conn.node2.isCoHost) &&
           conn.node1.publicKey === this.me.publicKey &&
           conn.type === CONNECTION_TYPE.PRODUCER)
     );
@@ -126,8 +153,8 @@ export class CollaborationGraph {
       .filter(
         node =>
           node.publicKey !== this.me.publicKey &&
-          node.getUsedAudioOutputs() < node.getMaxAudioOutput() &&
-          !this.myConsumerNodes(node) &&
+          this.countConsumerNodes(node) < node.getMaxAudioOutput() &&
+          !this.myConsumerNode(node) &&
           !this.refused.some(
             refusedNode => refusedNode.publicKey === node.publicKey
           )
@@ -161,7 +188,7 @@ export class CollaborationGraph {
   }
 
   calculateNetworkScore(node) {
-    return this.calculateOutputSpeed(node) / this.optimumUploadSpeed;
+    return this.calculateOutputSpeed(node) / this.optimumUploadSpeedKbps;
   }
 
   calculateOutputSpeed(node) {
@@ -205,13 +232,13 @@ export class CollaborationGraph {
   calculateNodeSpeed(node) {
     return Math.min(
       node.getUploadSpeedInKbps() / node.getMaxAudioOutput(),
-      this.optimumUploadSpeed
+      this.optimumUploadSpeedKbps
     );
   }
 
   calculateLoadScore(node) {
     return (
-      (node.getMaxAudioOutput() - node.getUsedAudioOutputs()) /
+      (node.getMaxAudioOutput() - this.countConsumerNodes(node)) /
       node.getMaxAudioOutput()
     );
   }
@@ -296,7 +323,7 @@ export class CollaborationGraph {
   }
 
   viableNodeConnection(node) {
-    if (this.me.getUsedAudioOutputs() < this.me.getMaxAudioOutput())
+    if (this.countConsumerNodes(this.me) < this.me.getMaxAudioOutput())
       return [true];
     const nodeScore = this.calculateNodeScore(node);
     const [worstNode, worstScore] = this.getWorstChild();
