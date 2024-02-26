@@ -1,5 +1,7 @@
 import { Peer } from './Peer.js';
 import { CollaborationGraph } from './CollaborationGraph.js';
+import { nostrChannel } from './NostrChannel.js';
+
 export class Space {
   constructor(
     id,
@@ -19,7 +21,9 @@ export class Space {
     requestConnectionToPeer,
     sendIceCandidateToRemotePeer,
     sendAnswer,
-    sendOffer
+    sendOffer,
+    addRemoteAudio = (stream, nodePublicKey) => {},
+    dropRemoteAudio = nodePublicKey => {}
   ) {
     this.requestConnectionToPeer = requestConnectionToPeer;
     this.sendIceCandidateToRemotePeer = sendIceCandidateToRemotePeer;
@@ -52,6 +56,9 @@ export class Space {
     //this.peers = [];
     this.state = 'open';
     this.subscriptionClosers = [];
+    this.addRemoteAudio = addRemoteAudio;
+    this.dropRemoteAudio = dropRemoteAudio;
+    this.speechRequest = [];
   }
 
   prepareSpace() {
@@ -65,6 +72,14 @@ export class Space {
       this.speedScoreWeight,
       this.loadScoreWeight
     );
+  }
+
+  addSpeechRequest(publicKey) {
+    this.speechRequest.push(publicKey);
+  }
+
+  requestSpeech() {
+    nostrChannel.requestSpeech(this);
   }
 
   joinSpace() {
@@ -166,5 +181,8 @@ export class Space {
   closeSubscriptions() {
     this.subscriptionClosers.forEach(subCloser => subCloser.close());
     this.subscriptionClosers = [];
+  }
+  audioProviderNode(node) {
+    return this.collaborationGraph.audioProviderNode(node);
   }
 }

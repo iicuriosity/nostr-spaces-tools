@@ -67,6 +67,10 @@ export class Peer {
             .forEach(track => this.peerConnection.addTrack(track, stream));
         })
         .catch(error => console.error('Error accessing media devices.', error));
+
+    if (this.space.audioProviderNode(this))
+      this.registerRemoteAudioStreamOutput();
+
     this.peerConnection.addEventListener('connectionstatechange', () => {
       if (
         this.lastPeerConnectionState === 'new' &&
@@ -95,13 +99,18 @@ export class Peer {
     });
   }
 
-  registerRemoteAudioStreamOutput(playRemoteAudioStream) {
+  registerRemoteAudioStreamOutput() {
     // Listen for remote stream
     this.peerConnection.ontrack = event => {
+      //if (this.isCoHost || this.isHost || this.isSpeaker) return;
       const [remoteStream] = event.streams;
-      playRemoteAudioStream(remoteStream);
+      this.space.addRemoteAudio(remoteStream, this.publicKey);
       this.space.broadcastTrack(this, event, remoteStream);
     };
+  }
+
+  closeRemoteAudioStreamOutput() {
+    this.space.dropRemoteAudio(this.publicKey);
   }
 
   transmitTrack(peer, event, remoteStream) {
@@ -161,6 +170,7 @@ export class Peer {
   closeChannel() {
     this.closeSubscriptions();
     this.stopMediaTracks();
+    this.closeRemoteAudioStreamOutput();
     if (this.peerConnection) this.peerConnection.close();
     this.peerConnection = null;
   }

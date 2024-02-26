@@ -110,36 +110,58 @@ export class CollaborationGraph {
 
   myConsumerNode(node) {
     return this.connections.some(
-      (conn =>
-        conn.node1.publicKey === node.publicKey &&
-        conn.node2.publicKey === this.me.publicKey &&
-        conn.type === CONNECTION_TYPE.CONSUMER) ||
-        (conn =>
-          conn.node2.publicKey === node.publicKey &&
+      conn =>
+        (conn.node1.publicKey === node.publicKey &&
+          conn.node2.publicKey === this.me.publicKey &&
+          conn.type === CONNECTION_TYPE.CONSUMER) ||
+        (conn.node2.publicKey === node.publicKey &&
           conn.node1.publicKey === this.me.publicKey &&
           conn.type === CONNECTION_TYPE.PRODUCER)
     );
   }
 
+  audioProviderNode(node) {
+    return this.connections.some(
+      conn =>
+        node.isSpeaker ||
+        node.isCoHost ||
+        node.isHost ||
+        (conn.node2.publicKey === node.publicKey &&
+          conn.node1.publicKey === this.me.publicKey &&
+          conn.type === CONNECTION_TYPE.CONSUMER) ||
+        (conn.node1.publicKey === node.publicKey &&
+          conn.node2.publicKey === this.me.publicKey &&
+          conn.type === CONNECTION_TYPE.PRODUCER)
+    );
+  }
+
+  isNodeConnected(node) {
+    return this.connections.some(
+      conn =>
+        (conn.node1.publicKey === node.publicKey &&
+          conn.node2.publicKey === this.me.publicKey) ||
+        (conn.node2.publicKey === node.publicKey &&
+          conn.node1.publicKey === this.me.publicKey)
+    );
+  }
+
   countConsumerNodes(node) {
     return this.connections.filter(
-      (conn =>
-        conn.node2.publicKey === node.publicKey &&
-        conn.type === CONNECTION_TYPE.CONSUMER) ||
-        (conn =>
-          conn.node1.publicKey === node.publicKey &&
+      conn =>
+        (conn.node2.publicKey === node.publicKey &&
+          conn.type === CONNECTION_TYPE.CONSUMER) ||
+        (conn.node1.publicKey === node.publicKey &&
           conn.type === CONNECTION_TYPE.PRODUCER)
     ).length;
   }
 
   getBroadCastNodes() {
     return this.connections.filter(
-      (conn =>
-        !(conn.node1.isSpeaker || conn.node1.isHost || conn.node1.isCoHost) &&
-        conn.node2.publicKey === this.me.publicKey &&
-        conn.type === CONNECTION_TYPE.CONSUMER) ||
-        (conn =>
-          !(conn.node2.isSpeaker || conn.node2.isHost || conn.node2.isCoHost) &&
+      conn =>
+        (!(conn.node1.isSpeaker || conn.node1.isHost || conn.node1.isCoHost) &&
+          conn.node2.publicKey === this.me.publicKey &&
+          conn.type === CONNECTION_TYPE.CONSUMER) ||
+        (!(conn.node2.isSpeaker || conn.node2.isHost || conn.node2.isCoHost) &&
           conn.node1.publicKey === this.me.publicKey &&
           conn.type === CONNECTION_TYPE.PRODUCER)
     );
