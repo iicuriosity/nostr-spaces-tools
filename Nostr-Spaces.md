@@ -124,12 +124,12 @@ The JOIN_SPACE event marks a peer's entry into an existing space for audio broad
 
 **Content:** Contains details about the joining peer in a JSON structure:
 
-  **name:** The display name of the peer.
-  **publicKey:** The Nostr public key of the peer, serving as their identifier within the network.
-  **networkMetrics:** An object detailing the peer's network capabilities, which includes:
-  >**downloadSpeedKbps:** The download speed in Kbps, indicating the peer's ability to receive streams.
-  >**uploadSpeedKbps:** The upload speed in Kbps, relevant for peers who might broadcast audio.
-  >**maxAudioOutputs:** The maximum number of concurrent audio streams the peer can handle, influencing their participation in multi-speaker spaces.
+  **name:** The display name of the peer.  
+  **publicKey:** The Nostr public key of the peer, serving as their identifier within the network.  
+  **networkMetrics:** An object detailing the peer's network capabilities, which includes:  
+  >**downloadSpeedKbps:** The download speed in Kbps, indicating the peer's ability to receive streams.  
+  >**uploadSpeedKbps:** The upload speed in Kbps, relevant for peers who might broadcast audio.  
+  >**maxAudioOutputs:** The maximum number of concurrent audio streams the peer can handle, influencing their participation in multi-speaker spaces.  
   >**networkConnectionType:** The type of network connection (e.g., WiFi, 4G), which can affect the quality and reliability of the peer's connection.
 
 Example of event content structure:
