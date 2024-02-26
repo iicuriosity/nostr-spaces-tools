@@ -27,18 +27,18 @@ const EVENT_KINDS = {
   JOIN_SPACE: 31101, // This event is triggered by the peer when they join a space
   LEAVE_SPACE: 31102, // This event is triggered by a peer when they leave a space
   CLOSE_SPACE: 1001, // This event is triggered by the host when they close the space
-  RESERVE_CONNECTION: 21101, // This event is triggered by a peer when there is a connection attempt between them and another peer, not to be stored by the relays, not to be stored by the relays
-  CONFIRM_CONNECTION: 31103, //This event is triggered by a peer after receiving a RESERVE_CONNECTION request from another peer and accepting the request
+  RESERVE_CONNECTION: 31103, // This event is triggered by a peer when there is a connection attempt between them and another peer.
+  CONFIRM_CONNECTION: 31104, //This event is triggered by a peer after receiving a RESERVE_CONNECTION request from another peer and accepting the request
   SDP_OFFER: 21102, // This event is triggered by a peer to exchange the webrtc sdp data, not to be stored by the relays
   SDP_ANSWER: 21103, // This event is triggered by a peer as a response to the SDP_OFFER, not to be stored by the relays
   ICE_CANDIDATE: 21104, // This event is triggered when an ICE candidate is sent to a peer, not to be stored by the relays
-  DROP_CONNECTION: 31104, // This event is triggered when a peer drops connection to another peer
+  DROP_CONNECTION: 31105, // This event is triggered when a peer drops connection to another peer
   //MUTE_PEER: 31105, // This event is triggered by a host or co-host to mute a peer
   //UNMUTE_PEER: 31106, // This event is triggered by a host or co-host to mute a peer
-  REMOVE_PEER: 31107, // This event is triggered when a peer is removed from the space by a host or co-host
-  PROMOTE_SPEAKER: 31108, // This event is either sent by the Host/co-host to promote a peer to speaker
-  PROMOTE_COHOST: 31109, // This event is either sent by the Host/co-host to promote a peer to co-host
-  DEMOTE_TO_PEER: 31110, // This event is either sent by the Host/co-host to demote a speaker to peer or a speaker to demote themselve to peer
+  REMOVE_PEER: 31106, // This event is triggered when a peer is removed from the space by a host or co-host
+  PROMOTE_SPEAKER: 31107, // This event is either sent by the Host/co-host to promote a peer to speaker
+  PROMOTE_COHOST: 31108, // This event is either sent by the Host/co-host to promote a peer to co-host
+  DEMOTE_TO_PEER: 31109, // This event is either sent by the Host/co-host to demote a speaker to peer or a speaker to demote themselve to peer
   REQUEST_SPEECH: 21105, // This event is sent by a peer that wishes to speak, not to be stored by the relays
   PROPOSE_SPEECH: 21105, // This event is either sent by the Host/co-host, not to be stored by the relays
 };
@@ -246,7 +246,8 @@ class NostrChannel {
 
     const activeSpaces = [];
     for (const event of creationEvents) {
-      const spaceId = event.tags.find(tag => tag[0] === TAGS.SPACE)?.[1];
+      const createSpaceEvent = JSON.parse(event.content);
+      const hostId = event.tags.find(tag => tag[0] === TAGS.CREATOR)?.[1];
 
       // Check for a CLOSE_SPACE event for each space ID
       const closeEvents = await this._queryEvents({
@@ -255,15 +256,12 @@ class NostrChannel {
             authors: [event.pubkey],
             kinds: [EVENT_KINDS.CLOSE_SPACE],
             tags: [
-              [TAGS.SPACE, spaceId],
-              [TAGS.RTC_APP, SPACES_APP],
+              [TAGS.SPACE, createSpaceEvent.id],
+              [TAGS.CREATOR, hostId][(TAGS.RTC_APP, SPACES_APP)],
             ],
           },
         ],
       });
-
-      // If no CLOSE_SPACE event found, consider the space active
-      const createSpaceEvent = JSON.parse(event.content);
       if (
         closeEvents.length === 0 &&
         createSpaceEvent.host.publicKey !== this.profile.publicKey
@@ -522,6 +520,16 @@ class NostrChannel {
         [TAGS.SPACE, peer.space.id],
         [TAGS.CREATOR, peer.space.host.publicKey],
         [TAGS.RTC_APP, SPACES_APP],
+        [
+          TAGS.D,
+          peer.space.id +
+            '||' +
+            peer.space.host.publicKey +
+            '||' +
+            this.profile.publicKey +
+            '||' +
+            peer.publicKey,
+        ],
       ], // Tag to direct the message to a specific peer
     };
 
