@@ -41,29 +41,30 @@ The Nostr Spaces protocol leverages a diverse set of event types to enable real-
 
 ## CREATE_SPACE
 
-Description
+**Description**
 The "Create Space" event is the first step in establishing a new audio broadcasting space within the Nostr network. Initiated by a host, this event encapsulates all necessary metadata to define the space's characteristics and rules.
 
-Event Generation
-Initiator: The host, who wishes to create a new space.
-Trigger: The host generates a CREATE_SPACE event when they decide to create a new space for audio broadcasting.
+**Event Generation**
+**Initiator:** The host, who wishes to create a new space.
+**Trigger:** The host generates a CREATE_SPACE event when they decide to create a new space for audio broadcasting.
 
-Event Data
-The CREATE_SPACE event includes the following key pieces of information:
+**Event Data**
+The **CREATE_SPACE** event includes the following key pieces of information:
 
-Kind: 1000, which is used to indicate the creation of a new space.
+**Kind:** 1000, which is used to indicate the creation of a new space.
 
-Content: The event content is a JSON string that includes:
+**Content:** The event content is a JSON string that includes:
 
-id: A unique identifier for the space.
-name: The name of the space.
-host: An object containing information about the host of the space, which includes:
-publicKey: The public key of the host.
-networkMetrics: An object detailing network metrics relevant to the host, which includes:
-downloadSpeedKbps: The download speed in Kbps.
-uploadSpeedKbps: The upload speed in Kbps.
-maxAudioOutputs: The maximum number of audio outputs supported.
-networkConnectionType: The type of network connection.
+**id:** A unique identifier for the space.  
+**name:** The name of the space.
+**host:** An object containing information about the host of the space, which includes:
+  **publicKey:** The public key of the host.
+  **networkMetrics:** An object detailing network metrics relevant to the host, which includes:
+    **downloadSpeedKbps:** The download speed in Kbps.
+    **uploadSpeedKbps:** The upload speed in Kbps.
+    **maxAudioOutputs:** The maximum number of audio outputs supported.
+    **networkConnectionType:** The type of network connection.
+
 Example of event content structure:
 
 ```jsonc
@@ -81,40 +82,45 @@ Example of event content structure:
   }
 }
 ```
+**Tags:** The event includes one tag:
+  **['webrtc', 'spaces']:** Categorizes the event under the Nostr Spaces application, specifically indicating that it's related to WebRTC-based spaces.
 
-Tags: The event includes one tag:
-['webrtc', 'spaces']: Categorizes the event under the Nostr Spaces application, specifically indicating that it's related to WebRTC-based spaces.
-
-Event Broadcasting
+**Event Broadcasting**
 Upon creation, the host broadcasts the CREATE_SPACE event to the Nostr network via their connected relays. This event is then propagated to other peers and relays, making the space discoverable to potential participants.
 
-Handling by Peers and Relays
-Peers: Upon receiving a CREATE_SPACE event, client applications can update their UI to reflect the new space, allowing users to join if interested.
-Relays: Relays store and disseminate CREATE_SPACE events to interested subscribers, facilitating space discovery and participation.
-Security and Privacy Considerations
+**Handling by Peers and Relays**
+**Peers:** Upon receiving a CREATE_SPACE event, client applications can update their UI to reflect the new space, allowing users to join if interested.
+**Relays:** Relays store and disseminate CREATE_SPACE events to interested subscribers, facilitating space discovery and participation.
+
+**Security and Privacy Considerations**
 To ensure the authenticity of a space, peers should verify that the CREATE_SPACE event is signed by the host's private key corresponding to the public key in the event. Additionally, hosts might employ mechanisms to control access to the space, such as invitation-only entry or password protection, to enhance privacy and security.
 
-Lifecycle
+**Lifecycle**
 The CREATE_SPACE event marks the beginning of a space's lifecycle. The space remains active until the host sends a CLOSE_SPACE event, which signals the space's termination and the release of all associated resources.
 
 ## JOIN_SPACE
 
-Description
+**Description**
 The JOIN_SPACE event marks a peer's entry into an existing space for audio broadcasting. It plays a crucial role in signaling the peer's presence to others within the space, allowing for the dynamic adaptation of the broadcast based on the participants' capabilities.
 
-Event Generation
-Initiator: Any peer desiring to join a space.
-Trigger: Initiated when a peer decides to enter a space, facilitated through the application interface.
-Event Data
-Kind: 31101, designating the JOIN_SPACE event.
-Content: Contains details about the joining peer in a JSON structure:
-name: The display name of the peer.
-publicKey: The Nostr public key of the peer, serving as their identifier within the network.
-networkMetrics: An object detailing the peer's network capabilities, which includes:
-downloadSpeedKbps: The download speed in Kbps, indicating the peer's ability to receive streams.
-uploadSpeedKbps: The upload speed in Kbps, relevant for peers who might broadcast audio.
-maxAudioOutputs: The maximum number of concurrent audio streams the peer can handle, influencing their participation in multi-speaker spaces.
-networkConnectionType: The type of network connection (e.g., WiFi, 4G), which can affect the quality and reliability of the peer's connection.
+**Event Generation**
+**Initiator:** Any peer desiring to join a space.
+**Trigger:** Initiated when a peer decides to enter a space, facilitated through the application interface.
+
+**Event Data**
+
+**Kind:** 31101, designating the JOIN_SPACE event.
+
+**Content:** Contains details about the joining peer in a JSON structure:
+
+  **name:** The display name of the peer.
+  **publicKey:** The Nostr public key of the peer, serving as their identifier within the network.
+    **networkMetrics:** An object detailing the peer's network capabilities, which includes:
+      **downloadSpeedKbps:** The download speed in Kbps, indicating the peer's ability to receive streams.
+      **uploadSpeedKbps:** The upload speed in Kbps, relevant for peers who might broadcast audio.
+      **maxAudioOutputs:** The maximum number of concurrent audio streams the peer can handle, influencing their participation in multi-speaker spaces.
+      **networkConnectionType:** The type of network connection (e.g., WiFi, 4G), which can affect the quality and reliability of the peer's connection.
+
 Example of event content structure:
 
 ```jsonc
@@ -130,18 +136,20 @@ Example of event content structure:
 }
 ```
 
-Tags:
-['s', space.id]: Links the event to the specific space the peer is joining.
-['d', space.id]: The d tag in the JOIN_SPACE event plays a strategic role by leveraging Nostr's parametrized replaceable feature. This allows for efficient updates and management of peer statuses within a space. By associating each JOIN_SPACE event with a unique space.id, the protocol ensures that any subsequent events related to a peer's status in the same space can supersede the earlier ones. This mechanism is particularly useful in dynamic environments where peers frequently join or leave spaces, ensuring that the system maintains up-to-date information without excessive data redundancy.
-['webrtc', 'spaces']: Identifies the event as part of the Nostr Spaces application, specifically for WebRTC-based audio spaces.
-Event Broadcasting
+**Tags:**
+  **['s', space.id]:** Links the event to the specific space the peer is joining.
+  **['d', space.id]:** The d tag in the JOIN_SPACE event plays a strategic role by leveraging Nostr's parametrized replaceable feature. This allows for efficient updates and management of peer statuses within a space. By associating each JOIN_SPACE event with a unique space.id, the protocol ensures that any subsequent events related to a peer's status in the same space can supersede the earlier ones. This mechanism is particularly useful in dynamic environments where peers frequently join or leave spaces, ensuring that the system maintains up-to-date information without excessive data redundancy.
+  **['webrtc', 'spaces']:** Identifies the event as part of the Nostr Spaces application, specifically for WebRTC-based audio spaces.
+
+**Event Broadcasting**
 The peer broadcasts the JOIN_SPACE event to the network through connected Nostr relays. This ensures that the host, co-hosts, and other peers within the space are informed of the new participant.
 
-Handling by Peers and Relays
-Peers: Current members of the space update their participant lists and may adjust the broadcast logic to accommodate the new peer's network capabilities.
-Relays: Nostr relays propagate the JOIN_SPACE event to all subscribers within the space, ensuring that every participant is aware of the new addition.
-Security and Privacy Considerations
+**Handling by Peers and Relays**
+**Peers:** Current members of the space update their participant lists and may adjust the broadcast logic to accommodate the new peer's network capabilities.
+**Relays:** Nostr relays propagate the JOIN_SPACE event to all subscribers within the space, ensuring that every participant is aware of the new addition.
+
+**Security and Privacy Considerations**
 Peers should verify the signature of the JOIN_SPACE event to ensure its authenticity. Spaces with access controls, such as invite-only or password-protected spaces, need to enforce these rules at the application level, maintaining the space's security and privacy.
 
-Lifecycle Implications
+**Lifecycle Implications**
 The JOIN_SPACE event signifies the beginning of a peer's participation in a space. This status continues until the peer either leaves the space (via LEAVE_SPACE) or the space is closed (via CLOSE_SPACE), at which point their active participation ends.
