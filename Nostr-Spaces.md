@@ -33,10 +33,10 @@ The Nostr Spaces protocol leverages a diverse set of event types to enable real-
 **LEAVE_SPACE (31102):** Sent by a peer to signal their departure from a space, allowing for clean disconnection and resource reallocation.
 **CLOSE_SPACE (1001):** Initiated by the host to permanently close a space. This event signals all participants to terminate their connections.
 **RESERVE_CONNECTION (21101):** Used by a peer to initiate a WebRTC connection with another peer, typically for upgrading to a speaker role.
-**CONFIRM_CONNECTION (31103):** A response to RESERVE_CONNECTION, indicating acceptance of the WebRTC connection and proceeding with the handshake.
-**SDP_OFFER (21102) and SDP_ANSWER (21103):** Part of the WebRTC signaling process, these events exchange session description protocol (SDP) data to establish media connections.
-**ICE_CANDIDATE (21104):** Exchanges network information to find the best path for media stream between peers in the WebRTC connection.
-**DROP_CONNECTION (31104):** Indicates the termination of an existing WebRTC connection, either due to a peer leaving or being disconnected.
+**CONFIRM_CONNECTION (31103):** A response to RESERVE_CONNECTION, indicating acceptance of the WebRTC connection and proceeding with the handshake.  
+**SDP_OFFER (21102) and SDP_ANSWER (21103):** Part of the WebRTC signaling process, these events exchange session description protocol (SDP) data to establish media connections.  
+**ICE_CANDIDATE (21104):** Exchanges network information to find the best path for media stream between peers in the WebRTC connection  
+**DROP_CONNECTION (31104):** Indicates the termination of an existing WebRTC connection, either due to a peer leaving or being disconnected  
 **REMOVE_PEER (31107), PROMOTE_SPEAKER (31108), PROMOTE_COHOST (31109), DEMOTE_TO_PEER (31110):** Manage peer roles within a space, adjusting their permissions and capabilities.
 
 ## CREATE_SPACE
