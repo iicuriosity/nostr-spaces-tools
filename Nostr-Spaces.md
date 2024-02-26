@@ -41,16 +41,16 @@ The Nostr Spaces protocol leverages a diverse set of event types to enable real-
 
 ## CREATE_SPACE
 
-**Description**
+### Description
 
 The "Create Space" event is the first step in establishing a new audio broadcasting space within the Nostr network. Initiated by a host, this event encapsulates all necessary metadata to define the space's characteristics and rules.
 
-**Event Generation**  
+### Event Generation  
 
 **Initiator:** The host, who wishes to create a new space.  
 **Trigger:** The host generates a CREATE_SPACE event when they decide to create a new space for audio broadcasting.
 
-**Event Data**
+### Event Data
 
 The **CREATE_SPACE** event includes the following key pieces of information:
 
@@ -90,11 +90,11 @@ Example of event content structure:
   **['webrtc', 'spaces']:** Categorizes the event under the Nostr Spaces application, specifically indicating that it's related to WebRTC-based spaces.  
   **['h', space.host.publicKey]:** The tag uses the 'h' key to denote the "host" of the space. The value is the public key of the host, establishing the event's origin and providing a way to trace back to the space's creator for any administrative purposes or queries.
 
-**Event Broadcasting**
+### Event Broadcasting
 
 Upon creation, the host broadcasts the CREATE_SPACE event to the Nostr network via their connected relays. This event is then propagated to other peers and relays, making the space discoverable to potential participants.
 
-**Handling by Peers and Relays**
+### Handling by Peers and Relays
 
 **Peers:** Upon receiving a CREATE_SPACE event, client applications can update their UI to reflect the new space, allowing users to join if interested.  
 **Relays:** Relays store and disseminate CREATE_SPACE events to interested subscribers, facilitating space discovery and participation.
@@ -109,16 +109,16 @@ The CREATE_SPACE event marks the beginning of a space's lifecycle. The space rem
 
 ## JOIN_SPACE
 
-**Description**
+### Description
 
 The JOIN_SPACE event marks a peer's entry into an existing space for audio broadcasting. It plays a crucial role in signaling the peer's presence to others within the space, allowing for the dynamic adaptation of the broadcast based on the participants' capabilities.
 
-**Event Generation**  
+### Event Generation  
 
 **Initiator:** Any peer desiring to join a space.  
 **Trigger:** Initiated when a peer decides to enter a space, facilitated through the application interface.
 
-**Event Data**
+### Event Data
 
 **Kind:** 31101, designating the JOIN_SPACE event.
 
@@ -154,11 +154,11 @@ Example of event content structure:
 **['h', space.host.publicKey]:** Similar to the CREATE_SPACE event, this tag indicates the public key of the host or creator of the space, providing a reference to the administrative authority within the space.  
 **['webrtc', 'spaces']:** Identifies the event as part of the Nostr Spaces application, specifically for WebRTC-based audio spaces.
 
-**Event Broadcasting**
+### Event Broadcasting
 
 The peer broadcasts the JOIN_SPACE event to the network through connected Nostr relays. This ensures that the host, co-hosts, and other peers within the space are informed of the new participant.
 
-**Handling by Peers and Relays**
+### Handling by Peers and Relays
 
 **Peers:** Current members of the space update their participant lists and may adjust the broadcast logic to accommodate the new peer's network capabilities.  
 **Relays:** Nostr relays propagate the JOIN_SPACE event to all subscribers within the space, ensuring that every participant is aware of the new addition.
@@ -173,14 +173,14 @@ The JOIN_SPACE event signifies the beginning of a peer's participation in a spac
 
 ## LEAVE_SPACE
 
-**Description**
+### Description
 The LEAVE_SPACE event indicates that a peer is exiting a space. It's essential for maintaining an accurate count of active participants and managing the distribution of audio streams within the space.
 
-**Event Generation**  
+### Event Generation  
 **Initiator:** A peer who wishes to leave a space.  
 **Trigger:** Occurs when a peer chooses to exit a space, typically through a user action in the client application.
 
-**Event Data**
+### Event Data
 
 **Kind:** 31102, which identifies the event as a LEAVE_SPACE action.
 
@@ -193,11 +193,11 @@ The LEAVE_SPACE event indicates that a peer is exiting a space. It's essential f
 **['h', space.host.publicKey]:** Indicates the public key of the host, maintaining a reference to the administrative authority of the space.  
 **['webrtc', 'spaces']:** Continues to identify the event as part of the Nostr Spaces application, reinforcing the context of WebRTC-based audio communication.
 
-**Event Broadcasting**
+### Event Broadcasting
 
 The peer sends the LEAVE_SPACE event through their connected relays, notifying the space's host, co-hosts, and peers of their departure.
 
-**Handling by Peers and Relays**
+### Handling by Peers and Relays
 
 **Peers:** The remaining participants in the space update their lists to remove the leaving peer, potentially adjusting the audio stream distribution accordingly.  
 **Relays:** Propagate the LEAVE_SPACE event to ensure all participants are aware of the change in the space's composition.
@@ -214,11 +214,11 @@ Following the LEAVE_SPACE event, we could move on to describing the CLOSE_SPACE 
 
 ## CLOSE_SPACE
 
-**Description**
+### Description
 
 The CLOSE_SPACE event signifies the host's decision to terminate an existing space. This event is critical for formally ending the space's lifecycle and ensuring that all participants disconnect appropriately.
 
-**Event Generation**
+### Event Generation
 
 **Initiator:** The host of the space.  
 **Trigger:** Occurs when the host decides to close the space, which could be due to various reasons such as the end of the scheduled session, management decisions, or other operational considerations.
@@ -233,11 +233,11 @@ Event Data
 **['h', space.host.publicKey]:** Denotes the public key of the host, reaffirming their authority to close the space. This tag is crucial for validating the authenticity of the closure event.  
 **['webrtc', 'spaces']:** Maintains the association with the Nostr Spaces application, particularly within the WebRTC-based communication context.
 
-**Event Broadcasting**
+### Event Broadcasting
 
 Upon deciding to close the space, the host broadcasts the CLOSE_SPACE event through the connected relays. This widespread dissemination ensures that all current participants and potential future joiners are aware that the space is no longer active.
 
-**Handling by Peers and Relays**
+### Handling by Peers and Relays
 
 **Peers:** Upon receiving a CLOSE_SPACE event, participants within the space initiate disconnection procedures, leaving the space and freeing up resources associated with their participation. Client applications may also update their interfaces to reflect the space's closure.  
 **Relays:** Play a crucial role in ensuring the CLOSE_SPACE event reaches all current and future interested parties.
@@ -252,16 +252,16 @@ The issuance of a CLOSE_SPACE event represents the definitive end of a space's l
 
 ## RESERVE_CONNECTION
 
-**Description**
+### Description
 
 RESERVE_CONNECTION is used by a peer to demand the authorization to initiate a WebRTC connection with another peer, typically for establishing a direct communication channel. This event is transient and should not be persisted by the relay, only broadcasted to the intended recipient.
 
-**Event Generation**
+### Event Generation
 
 **Initiator:** Any peer within a space wishing to establish a direct WebRTC connection with another peer.  
 **Trigger:** Triggered when a peer decides to connect directly with another peer, either for sending or receiving audio streams.
 
-**Event Data**
+### Event Data
 
 **Kind:** 31103, indicating a RESERVE_CONNECTION event.  
 **Content:** Includes details necessary for initiating a WebRTC connection, such as: 
@@ -273,11 +273,11 @@ RESERVE_CONNECTION is used by a peer to demand the authorization to initiate a W
 **['webrtc', 'spaces']:** Categorizes the event under the Nostr Spaces application, emphasizing its role in facilitating WebRTC-based communications.  
 **['d', space.id + '||' + hostPublicKey + '||' + requestingPeerPublicKey + '||' + confirmingPeerPublicKey]:** Utilizes the Nostr protocol's parametrized replaceable feature for efficient event management, particularly in the context of connection statuses within the space.  
 
-**Event Broadcasting**
+### Event Broadcasting
 
 The RESERVE_CONNECTION event is broadcast to the specified peer and relevant entities within the space, signaling the intent to establish a direct connection.
 
-**Handling by Peers and Relays**
+### Handling by Peers and Relays
 
 **Peers:** The targeted peer, upon receiving a RESERVE_CONNECTION event, evaluates the request and may proceed with the WebRTC handshake process by generating a corresponding SDP_OFFER or SDP_ANSWER, depending on the connection type specified.  
 **Relays:** Play a crucial role in delivering the RESERVE_CONNECTION event from the sender to the intended recipient.
@@ -292,16 +292,16 @@ The RESERVE_CONNECTION event serves as an initial handshake signal between peers
 
 ## CONFIRM_CONNECTION
 
-**Description**
+### Description
 
 The CONFIRM_CONNECTION event is sent by a peer in response to receiving a RESERVE_CONNECTION request from another peer. It signifies the acceptance of the connection request and readiness to proceed with the WebRTC handshake process.
 
-**Event Generation**
+### Event Generation
 
 **Initiator:** A peer who has received a RESERVE_CONNECTION request and wishes to establish a WebRTC connection.  
 **Trigger:** The decision by the receiving peer to accept the connection request and engage in direct communication.
 
-**Event Data**
+### Event Data
 
 **Kind:** 31104, identifying the event as a CONFIRM_CONNECTION action.
 
@@ -316,11 +316,11 @@ Tags:
 **['h', space.host.publicKey]:** Maintains a reference to the host of the space, denoting administrative context.  
 **['webrtc', 'spaces']:** Categorizes the event within the Nostr Spaces application, with a focus on WebRTC-based connections.
 
-**Event Broadcasting**
+### Event Broadcasting
 
 Upon generating a CONFIRM_CONNECTION event, the confirming peer broadcasts it through their connected Nostr relays. This ensures that the initiating peer, and potentially other interested parties within the space, are aware of the confirmed connection.
 
-**Handling by Peers and Relays**
+### Handling by Peers and Relays
 
 **Peers:** The initiating peer, upon receiving a CONFIRM_CONNECTION event, proceeds with the WebRTC handshake process, exchanging SDP offers and answers to establish the media stream.  
 **Relays:** While relays facilitate the delivery of CONFIRM_CONNECTION events, they should treat these events as transient and not store them, focusing instead on real-time broadcasting to relevant peers.
@@ -624,16 +624,16 @@ The event is disseminated to all space participants to update the demoted peer's
 
 ## REQUEST_SPEECH
 
-**Description**
+### Description
 
 The REQUEST_SPEECH event is used by a peer to formally request the right to speak in a space. This is particularly useful in moderated spaces where speaking rights are controlled by the host or co-hosts.
 
-**Event Generation**
+### Event Generation
 
 **Initiator:** A peer who wishes to speak in a space.  
 **Trigger:** The peer sends a REQUEST_SPEECH event when they want to request speaking rights, usually through an action in the client application.
 
-**Event Data**
+### Event Data
 
 **Kind:** 21105, identifying the event as a speech request.  
 **Content:** This event does not require any additional data.
@@ -646,27 +646,27 @@ The REQUEST_SPEECH event is used by a peer to formally request the right to spea
 **['d', space.id + '||' + hostPublicKey + '||' + requestingPeerPublicKey]:** Utilizes the parametrized replaceable feature, ensuring that only the most recent speech request by the peer in the space is considered.  
 **['webrtc', 'spaces']:** Categorizes the event within the Nostr Spaces application, specifically for WebRTC-based audio spaces.
 
-**Event Broadcasting**
+### Event Broadcasting
 
 This event is broadcasted through the connected Nostr relays but is not intended to be stored permanently by the relays. It serves as a real-time signal to the host or co-hosts.
 
-**Handling by Peers and Relays**
+### Handling by Peers and Relays
 
 **Peers:** The host or co-hosts receive the request and can decide to grant speaking rights based on their discretion and the space's rules  
 **Relays:** Relay the REQUEST_SPEECH event to the host or co-hosts but do not store it, as it is relevant only in real-time.
 
-**PROPOSE_SPEECH**
+## PROPOSE_SPEECH
 
-**Description**
+### Description
 
 The PROPOSE_SPEECH event is used by the host or a co-host to suggest that a peer in the space may want to speak. This event serves as an invitation or encouragement for the peer to formally request speaking rights by sending a REQUEST_SPEECH event.
 
-**Event Generation**
+### Event Generation
 
 **Initiator:** The host or a co-host of the space.  
 **Trigger:** Sent when a host or co-host identifies a peer who could contribute to the conversation and wants to encourage them to request speaking rights.
 
-**Event Data**
+### Event Data
 
 **Kind:** 21105, marking the event as a speech proposal.  
 **Content:** The content can include a message or indication that the peer is being proposed to speak. This is more of an invitation rather than an automatic promotion to speaker status.
@@ -679,11 +679,11 @@ The PROPOSE_SPEECH event is used by the host or a co-host to suggest that a peer
 **['d', space.id + '||' + hostPublicKey + '||' + proposedPeerPublicKey]:** Utilizes the parametrized replaceable feature to manage speech proposals efficiently.  
 **['webrtc', 'spaces']:** Categorizes the event within the Nostr Spaces application, specifically for WebRTC-based audio spaces.
 
-**Event Broadcasting**
+### Event Broadcasting
 
 This event is broadcasted through the connected Nostr relays to the proposed peer, serving as a real-time suggestion or invitation to speak.
 
-**Handling by Peers and Relays**
+### Handling by Peers and Relays
 
 **Peers:** The proposed peer receives the proposal and, if willing to speak, should then send a REQUEST_SPEECH event to formally request speaking rights.  
 **Relays:** Relay the PROPOSE_SPEECH event to the proposed peer without storing it, as it's intended for real-time interaction.
