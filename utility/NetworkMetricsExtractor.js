@@ -4,7 +4,7 @@ export const extractNetworkMetrics = async () => {
     downloadSpeedKbps: 0, // in kbps
     uploadSpeedKbs: 0, // in kbps
     maxAudioOutputs: 10,
-    connectionType: navigator.connection.type,
+    networkConnectionType: navigator.connection.type,
   };
   return networkMetrics;
 };

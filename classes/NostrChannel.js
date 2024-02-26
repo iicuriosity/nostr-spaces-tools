@@ -787,11 +787,11 @@ class NostrChannel {
         id: space.id,
         name: space.name,
         host: this.profile.getPublicData(),
-        coHosts: space.coHosts,
+        //coHosts: space.coHosts,
       }),
       kind: EVENT_KINDS.CREATE_SPACE, // Adjust based on your defined kinds for offers
       tags: [
-        [TAGS.SPACE, space.id],
+        //[TAGS.SPACE, space.id],
         [TAGS.RTC_APP, SPACES_APP],
       ], // Tag to direct the message to a specific peer
     };
