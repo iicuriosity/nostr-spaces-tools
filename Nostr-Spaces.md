@@ -83,7 +83,7 @@ Example of event content structure:
 }
 ```
 **Tags:** The event includes one tag:
-  **['webrtc', 'spaces']:** Categorizes the event under the Nostr Spaces application, specifically indicating that it's related to WebRTC-based spaces.
+  **['webrtc', 'spaces']:** Categorizes the event under the Nostr Spaces application, specifically indicating that it's related to WebRTC-based spaces.  
   **['h', space.host.publicKey]:** The tag uses the 'h' key to denote the "host" of the space. The value is the public key of the host, establishing the event's origin and providing a way to trace back to the space's creator for any administrative purposes or queries.
 
 **Event Broadcasting**
@@ -116,11 +116,11 @@ The JOIN_SPACE event marks a peer's entry into an existing space for audio broad
 
   **name:** The display name of the peer.
   **publicKey:** The Nostr public key of the peer, serving as their identifier within the network.
-    **networkMetrics:** An object detailing the peer's network capabilities, which includes:
-      **downloadSpeedKbps:** The download speed in Kbps, indicating the peer's ability to receive streams.
-      **uploadSpeedKbps:** The upload speed in Kbps, relevant for peers who might broadcast audio.
-      **maxAudioOutputs:** The maximum number of concurrent audio streams the peer can handle, influencing their participation in multi-speaker spaces.
-      **networkConnectionType:** The type of network connection (e.g., WiFi, 4G), which can affect the quality and reliability of the peer's connection.
+  **networkMetrics:** An object detailing the peer's network capabilities, which includes:
+  >**downloadSpeedKbps:** The download speed in Kbps, indicating the peer's ability to receive streams.
+  >**uploadSpeedKbps:** The upload speed in Kbps, relevant for peers who might broadcast audio.
+  >**maxAudioOutputs:** The maximum number of concurrent audio streams the peer can handle, influencing their participation in multi-speaker spaces.
+  >**networkConnectionType:** The type of network connection (e.g., WiFi, 4G), which can affect the quality and reliability of the peer's connection.
 
 Example of event content structure:
 
@@ -138,9 +138,9 @@ Example of event content structure:
 ```
 
 **Tags:**
-  **['s', space.id]:** Links the event to the specific space the peer is joining.
-  **['d', space.id + '||' + space.host.publicKey + '||'+publicKey]:** Utilizes the Nostr protocol's parametrized replaceable feature, enabling efficient update and management of peer statuses within a space. The tag's value concatenates the space ID, the host's public key, and the user's public key, offering a unique identifier for replaceable events related to a peer's participation in the space.
-  **['h', space.host.publicKey]:** Similar to the CREATE_SPACE event, this tag indicates the public key of the host or creator of the space, providing a reference to the administrative authority within the space.
+  **['s', space.id]:** Links the event to the specific space the peer is joining.  
+  **['d', space.id + '||' + space.host.publicKey + '||'+publicKey]:** Utilizes the Nostr protocol's parametrized replaceable feature, enabling efficient update and management of peer statuses within a space. The tag's value concatenates the space ID, the host's public key, and the user's public key, offering a unique identifier for replaceable events related to a peer's participation in the space.  
+  **['h', space.host.publicKey]:** Similar to the CREATE_SPACE event, this tag indicates the public key of the host or creator of the space, providing a reference to the administrative authority within the space.  
   **['webrtc', 'spaces']:** Identifies the event as part of the Nostr Spaces application, specifically for WebRTC-based audio spaces.
 
 **Event Broadcasting**
@@ -172,10 +172,9 @@ The LEAVE_SPACE event indicates that a peer is exiting a space. It's essential f
 **Content:** Typically, this event does not require detailed content beyond identifying the leaving peer, as the primary purpose is to signal the departure.
 
 **Tags:**
-
-  **['s', space.id]:** Associates the event with the specific space from which the peer is leaving.
-  **['d', space.id + '||' + space.host.publicKey + '||' + publicKey]:** Uses the Nostr protocol's parametrized replaceable feature, allowing for efficient management of peer statuses. It enables the system to replace older JOIN_SPACE events with the latest state, reflecting the peer's departure.
-  **['h', space.host.publicKey]:** Indicates the public key of the host, maintaining a reference to the administrative authority of the space.
+  **['s', space.id]:** Associates the event with the specific space from which the peer is leaving.  
+  **['d', space.id + '||' + space.host.publicKey + '||' + publicKey]:** Uses the Nostr protocol's parametrized replaceable feature, allowing for efficient management of peer statuses. It enables the system to replace older JOIN_SPACE events with the latest state, reflecting the peer's departure.  
+  **['h', space.host.publicKey]:** Indicates the public key of the host, maintaining a reference to the administrative authority of the space.  
   **['webrtc', 'spaces']:** Continues to identify the event as part of the Nostr Spaces application, reinforcing the context of WebRTC-based audio communication.
 
 **Event Broadcasting**
