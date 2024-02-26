@@ -14,7 +14,7 @@ import {
 
 const TAGS = {
   SPACE: 's',
-  CREATOR: 'c',
+  CREATOR: 'h',
   PEER: 'p',
   RTC_APP: 'webrtc',
   D: 'd',
@@ -101,6 +101,7 @@ class NostrChannel {
       tags: [
         [TAGS.PEER, peer.publicKey],
         [TAGS.SPACE, peer.space.id],
+        [TAGS.CREATOR, peer.space.host.publicKey],
         [TAGS.RTC_APP, SPACES_APP],
       ], // Tag to direct the message to a specific peer
     };
@@ -125,6 +126,7 @@ class NostrChannel {
       tags: [
         [TAGS.PEER, peer.publicKey],
         [TAGS.SPACE, peer.space.id],
+        [TAGS.CREATOR, peer.space.host.publicKey],
         [TAGS.RTC_APP, SPACES_APP],
       ], // Tag to direct the message to a specific peer
     };
@@ -148,6 +150,7 @@ class NostrChannel {
       tags: [
         [TAGS.PEER, peer.publicKey],
         [TAGS.SPACE, peer.space.id],
+        [TAGS.CREATOR, peer.space.host.publicKey],
         [TAGS.RTC_APP, SPACES_APP],
       ], // Tag to direct the message to a specific peer
     };
@@ -318,6 +321,7 @@ class NostrChannel {
             kinds: [EVENT_KINDS.CLOSE_SPACE],
             tags: [
               [TAGS.SPACE, space.id],
+              [TAGS.CREATOR, space.host.publicKey],
               [TAGS.RTC_APP, SPACES_APP],
             ],
           },
@@ -352,6 +356,7 @@ class NostrChannel {
             kinds: [EVENT_KINDS.JOIN_SPACE],
             tags: [
               [TAGS.SPACE, space.id],
+              [TAGS.CREATOR, space.host.publicKey],
               [TAGS.RTC_APP, SPACES_APP],
             ],
           },
@@ -367,6 +372,7 @@ class NostrChannel {
           kinds: [EVENT_KINDS.JOIN_SPACE],
           tags: [
             [TAGS.RTC_APP, SPACES_APP],
+            [TAGS.CREATOR, space.host.publicKey],
             [TAGS.SPACE, space.id],
           ],
         },
@@ -379,6 +385,7 @@ class NostrChannel {
           kinds: [EVENT_KINDS.LEAVE_SPACE],
           tags: [
             [TAGS.RTC_APP, SPACES_APP],
+            [TAGS.CREATOR, space.host.publicKey],
             [TAGS.SPACE, space.id],
           ],
         },
@@ -411,6 +418,7 @@ class NostrChannel {
           kinds: [EVENT_KINDS.CONFIRM_CONNECTION],
           tags: [
             [TAGS.RTC_APP, SPACES_APP],
+            [TAGS.CREATOR, space.host.publicKey],
             [TAGS.SPACE, space.id],
           ],
         },
@@ -423,6 +431,7 @@ class NostrChannel {
           kinds: [EVENT_KINDS.DROP_CONNECTION],
           tags: [
             [TAGS.RTC_APP, SPACES_APP],
+            [TAGS.CREATOR, space.host.publicKey],
             [TAGS.SPACE, space.id],
           ],
         },
@@ -489,6 +498,7 @@ class NostrChannel {
             kinds: [EVENT_KINDS.RESERVE_CONNECTION],
             tags: [
               [TAGS.SPACE, space.id],
+              [TAGS.CREATOR, space.host.publicKey],
               [TAGS.PEER, this.profile.publicKey],
               [TAGS.RTC_APP, SPACES_APP],
             ],
@@ -510,6 +520,7 @@ class NostrChannel {
       tags: [
         [TAGS.PEER, peer.publicKey],
         [TAGS.SPACE, peer.space.id],
+        [TAGS.CREATOR, peer.space.host.publicKey],
         [TAGS.RTC_APP, SPACES_APP],
       ], // Tag to direct the message to a specific peer
     };
@@ -521,6 +532,7 @@ class NostrChannel {
     //this._verifyChannelSetup();
     await this.sendSimpleEvent(EVENT_KINDS.REQUEST_SPEECH, [
       [TAGS.SPACE, space.id],
+      [TAGS.CREATOR, space.host.publicKey],
       [TAGS.RTC_APP, SPACES_APP],
     ]);
   }
@@ -537,6 +549,7 @@ class NostrChannel {
             kinds: [EVENT_KINDS.REQUEST_SPEECH],
             tags: [
               [TAGS.SPACE, space.id],
+              [TAGS.CREATOR, space.host.publicKey],
               [TAGS.RTC_APP, SPACES_APP],
             ],
           },
@@ -555,10 +568,17 @@ class NostrChannel {
     await this.sendSimpleEvent(EVENT_KINDS.DROP_CONNECTION, [
       [TAGS.PEER, peer.publicKey],
       [TAGS.SPACE, peer.space.id],
+      [TAGS.CREATOR, peer.space.host.publicKey],
       [TAGS.RTC_APP, SPACES_APP],
       [
         TAGS.D,
-        peer.space.id + '||' + producer.publicKey + '||' + consumer.publicKey,
+        peer.space.id +
+          '||' +
+          peer.space.host.publicKey +
+          '||' +
+          producer.publicKey +
+          '||' +
+          consumer.publicKey,
       ],
     ]);
   }
@@ -575,10 +595,17 @@ class NostrChannel {
       tags: [
         [TAGS.PEER, peer.publicKey],
         [TAGS.SPACE, peer.space.id],
+        [TAGS.CREATOR, peer.space.host.publicKey],
         [TAGS.RTC_APP, SPACES_APP],
         [
           TAGS.D,
-          peer.space.id + '||' + peer.publicKey + '||' + this.profile.publicKey,
+          peer.space.id +
+            '||' +
+            peer.space.host.publicKey +
+            '||' +
+            peer.publicKey +
+            '||' +
+            this.profile.publicKey,
         ],
       ], // Tag to direct the message to a specific peer
     };
@@ -609,6 +636,7 @@ class NostrChannel {
             kinds: [EVENT_KINDS.CONFIRM_CONNECTION],
             tags: [
               [TAGS.SPACE, space.id],
+              [TAGS.CREATOR, space.host.publicKey],
               [TAGS.RTC_APP, SPACES_APP],
             ],
           },
@@ -636,6 +664,7 @@ class NostrChannel {
             kinds: [EVENT_KINDS.DROP_CONNECTION],
             tags: [
               [TAGS.SPACE, space.id],
+              [TAGS.CREATOR, space.host.publicKey],
               [TAGS.RTC_APP, SPACES_APP],
             ],
           },
@@ -657,7 +686,15 @@ class NostrChannel {
       kind: EVENT_KINDS.JOIN_SPACE,
       tags: [
         [TAGS.SPACE, space.id],
-        [TAGS.D, space.id],
+        [TAGS.CREATOR, space.host.publicKey],
+        [
+          TAGS.D,
+          space.id +
+            '||' +
+            space.host.publicKey +
+            '||' +
+            this.profile.publicKey,
+        ],
         [TAGS.RTC_APP, SPACES_APP],
       ],
     };
@@ -681,7 +718,11 @@ class NostrChannel {
     //this._verifyChannelSetup();
     await this.sendSimpleEvent(EVENT_KINDS.LEAVE_SPACE, [
       [TAGS.SPACE, space.id],
-      [TAGS.D, space.id],
+      [
+        TAGS.D,
+        space.id + '||' + space.host.publicKey + '||' + this.profile.publicKey,
+      ],
+      [TAGS.CREATOR, space.host.publicKey],
       [TAGS.RTC_APP, SPACES_APP],
     ]);
   }
@@ -700,6 +741,7 @@ class NostrChannel {
             kinds: [EVENT_KINDS.LEAVE_SPACE],
             tags: [
               [TAGS.SPACE, peer.space.id],
+              [TAGS.CREATOR, peer.space.host.publicKey],
               [TAGS.RTC_APP, SPACES_APP],
             ],
           },
@@ -724,6 +766,7 @@ class NostrChannel {
             kinds: [EVENT_KINDS.SDP_OFFER],
             tags: [
               [TAGS.SPACE, peer.space.id],
+              [TAGS.CREATOR, peer.space.host.publicKey],
               [TAGS.PEER, this.profile.publicKey],
               [TAGS.RTC_APP, SPACES_APP],
             ],
@@ -749,6 +792,7 @@ class NostrChannel {
             tags: [
               [TAGS.PEER, peer.publicKey],
               [TAGS.SPACE, peer.space.id],
+              [TAGS.CREATOR, peer.space.host.publicKey],
               [TAGS.RTC_APP, SPACES_APP],
             ],
           },
@@ -772,6 +816,7 @@ class NostrChannel {
             kinds: [EVENT_KINDS.SDP_ANSWER],
             tags: [
               [TAGS.SPACE, peer.space.id],
+              [TAGS.CREATOR, peer.space.host.publicKey],
               [TAGS.RTC_APP, SPACES_APP],
             ],
           },
@@ -793,6 +838,7 @@ class NostrChannel {
       tags: [
         //[TAGS.SPACE, space.id],
         [TAGS.RTC_APP, SPACES_APP],
+        [TAGS.CREATOR, space.host.publicKey],
       ], // Tag to direct the message to a specific peer
     };
     await this._sendEvent(event);
