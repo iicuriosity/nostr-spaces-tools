@@ -58,15 +58,15 @@ The **CREATE_SPACE** event includes the following key pieces of information:
 
 **Content:** The event content is a JSON string that includes:
 
-**id:** A unique identifier for the space.  
-**name:** The name of the space.  
-**host:** An object containing information about the host of the space, which includes:  
-  >**publicKey:** The public key of the host.  
-  >**networkMetrics:** An object detailing network metrics relevant to the host, which includes:  
-  >>**downloadSpeedKbps:** The download speed in Kbps.  
-  >>**uploadSpeedKbps:** The upload speed in Kbps.  
-  >>**maxAudioOutputs:** The maximum number of audio outputs supported.  
-  >>**networkConnectionType:** The type of network connection.
+- **id:** A unique identifier for the space.  
+- **name:** The name of the space.  
+- **host:** An object containing information about the host of the space, which includes:  
+  - **publicKey:** The public key of the host.  
+  - **networkMetrics:** An object detailing network metrics relevant to the host, which includes:  
+    - **downloadSpeedKbps:** The download speed in Kbps.  
+    - **uploadSpeedKbps:** The upload speed in Kbps.  
+    - **maxAudioOutputs:** The maximum number of audio outputs supported.  
+    - **networkConnectionType:** The type of network connection.
 
 Example of event content structure:
 
