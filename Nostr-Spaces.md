@@ -42,13 +42,16 @@ The Nostr Spaces protocol leverages a diverse set of event types to enable real-
 ## CREATE_SPACE
 
 **Description**
+
 The "Create Space" event is the first step in establishing a new audio broadcasting space within the Nostr network. Initiated by a host, this event encapsulates all necessary metadata to define the space's characteristics and rules.
 
-**Event Generation**
-**Initiator:** The host, who wishes to create a new space.
+**Event Generation**  
+
+**Initiator:** The host, who wishes to create a new space.  
 **Trigger:** The host generates a CREATE_SPACE event when they decide to create a new space for audio broadcasting.
 
 **Event Data**
+
 The **CREATE_SPACE** event includes the following key pieces of information:
 
 **Kind:** 1000, which is used to indicate the creation of a new space.
@@ -82,30 +85,37 @@ Example of event content structure:
   }
 }
 ```
-**Tags:** The event includes one tag:
+**Tags:** The event includes two tags:  
+
   **['webrtc', 'spaces']:** Categorizes the event under the Nostr Spaces application, specifically indicating that it's related to WebRTC-based spaces.  
   **['h', space.host.publicKey]:** The tag uses the 'h' key to denote the "host" of the space. The value is the public key of the host, establishing the event's origin and providing a way to trace back to the space's creator for any administrative purposes or queries.
 
 **Event Broadcasting**
+
 Upon creation, the host broadcasts the CREATE_SPACE event to the Nostr network via their connected relays. This event is then propagated to other peers and relays, making the space discoverable to potential participants.
 
 **Handling by Peers and Relays**
-**Peers:** Upon receiving a CREATE_SPACE event, client applications can update their UI to reflect the new space, allowing users to join if interested.
+
+**Peers:** Upon receiving a CREATE_SPACE event, client applications can update their UI to reflect the new space, allowing users to join if interested.  
 **Relays:** Relays store and disseminate CREATE_SPACE events to interested subscribers, facilitating space discovery and participation.
 
 **Security and Privacy Considerations**
+
 To ensure the authenticity of a space, peers should verify that the CREATE_SPACE event is signed by the host's private key corresponding to the public key in the event. Additionally, hosts might employ mechanisms to control access to the space, such as invitation-only entry or password protection, to enhance privacy and security.
 
 **Lifecycle**
+
 The CREATE_SPACE event marks the beginning of a space's lifecycle. The space remains active until the host sends a CLOSE_SPACE event, which signals the space's termination and the release of all associated resources.
 
 ## JOIN_SPACE
 
 **Description**
+
 The JOIN_SPACE event marks a peer's entry into an existing space for audio broadcasting. It plays a crucial role in signaling the peer's presence to others within the space, allowing for the dynamic adaptation of the broadcast based on the participants' capabilities.
 
-**Event Generation**
-**Initiator:** Any peer desiring to join a space.
+**Event Generation**  
+
+**Initiator:** Any peer desiring to join a space.  
 **Trigger:** Initiated when a peer decides to enter a space, facilitated through the application interface.
 
 **Event Data**
@@ -137,23 +147,28 @@ Example of event content structure:
 }
 ```
 
-**Tags:**
-  **['s', space.id]:** Links the event to the specific space the peer is joining.  
+**Tags:**  
+
+**['s', space.id]:** Links the event to the specific space the peer is joining.  
   **['d', space.id + '||' + space.host.publicKey + '||'+publicKey]:** Utilizes the Nostr protocol's parametrized replaceable feature, enabling efficient update and management of peer statuses within a space. The tag's value concatenates the space ID, the host's public key, and the user's public key, offering a unique identifier for replaceable events related to a peer's participation in the space.  
   **['h', space.host.publicKey]:** Similar to the CREATE_SPACE event, this tag indicates the public key of the host or creator of the space, providing a reference to the administrative authority within the space.  
   **['webrtc', 'spaces']:** Identifies the event as part of the Nostr Spaces application, specifically for WebRTC-based audio spaces.
 
 **Event Broadcasting**
+
 The peer broadcasts the JOIN_SPACE event to the network through connected Nostr relays. This ensures that the host, co-hosts, and other peers within the space are informed of the new participant.
 
 **Handling by Peers and Relays**
-**Peers:** Current members of the space update their participant lists and may adjust the broadcast logic to accommodate the new peer's network capabilities.
+
+**Peers:** Current members of the space update their participant lists and may adjust the broadcast logic to accommodate the new peer's network capabilities.  
 **Relays:** Nostr relays propagate the JOIN_SPACE event to all subscribers within the space, ensuring that every participant is aware of the new addition.
 
 **Security and Privacy Considerations**
+
 Peers should verify the signature of the JOIN_SPACE event to ensure its authenticity. Spaces with access controls, such as invite-only or password-protected spaces, need to enforce these rules at the application level, maintaining the space's security and privacy.
 
 **Lifecycle Implications**
+
 The JOIN_SPACE event signifies the beginning of a peer's participation in a space. This status continues until the peer either leaves the space (via LEAVE_SPACE) or the space is closed (via CLOSE_SPACE), at which point their active participation ends.
 
 ## LEAVE_SPACE
@@ -161,8 +176,8 @@ The JOIN_SPACE event signifies the beginning of a peer's participation in a spac
 **Description**
 The LEAVE_SPACE event indicates that a peer is exiting a space. It's essential for maintaining an accurate count of active participants and managing the distribution of audio streams within the space.
 
-**Event Generation**
-**Initiator:** A peer who wishes to leave a space.
+**Event Generation**  
+**Initiator:** A peer who wishes to leave a space.  
 **Trigger:** Occurs when a peer chooses to exit a space, typically through a user action in the client application.
 
 **Event Data**
@@ -171,23 +186,28 @@ The LEAVE_SPACE event indicates that a peer is exiting a space. It's essential f
 
 **Content:** Typically, this event does not require detailed content beyond identifying the leaving peer, as the primary purpose is to signal the departure.
 
-**Tags:**
-  **['s', space.id]:** Associates the event with the specific space from which the peer is leaving.  
+**Tags:**  
+
+**['s', space.id]:** Associates the event with the specific space from which the peer is leaving.  
   **['d', space.id + '||' + space.host.publicKey + '||' + publicKey]:** Uses the Nostr protocol's parametrized replaceable feature, allowing for efficient management of peer statuses. It enables the system to replace older JOIN_SPACE events with the latest state, reflecting the peer's departure.  
   **['h', space.host.publicKey]:** Indicates the public key of the host, maintaining a reference to the administrative authority of the space.  
   **['webrtc', 'spaces']:** Continues to identify the event as part of the Nostr Spaces application, reinforcing the context of WebRTC-based audio communication.
 
 **Event Broadcasting**
+
 The peer sends the LEAVE_SPACE event through their connected relays, notifying the space's host, co-hosts, and peers of their departure.
 
 **Handling by Peers and Relays**
-**Peers:** The remaining participants in the space update their lists to remove the leaving peer, potentially adjusting the audio stream distribution accordingly.
+
+**Peers:** The remaining participants in the space update their lists to remove the leaving peer, potentially adjusting the audio stream distribution accordingly.  
 **Relays:** Propagate the LEAVE_SPACE event to ensure all participants are aware of the change in the space's composition.
 
-**Security and Privacy Considerations**
+**Security and Privacy Considerations**  
+
 While the LEAVE_SPACE event might not carry sensitive information, the integrity of the event should still be verified to prevent spoofing and ensure that only genuine departure signals are processed.
 
-**Lifecycle Implications**
+**Lifecycle Implications**  
+
 The LEAVE_SPACE event concludes a peer's active participation in a space. It triggers cleanup processes, such as the removal of the peer from participant lists and the reevaluation of audio stream distributions to remaining peers.
 
 Following the LEAVE_SPACE event, we could move on to describing the CLOSE_SPACE event, which denotes the host's action to terminate a space, signaling the end of the space's lifecycle and the disconnection of all participants.
