@@ -1,4 +1,4 @@
-import { Connection } from './Connection';
+import { Connection } from './Connection.js';
 const CONNECTION_TYPE = {
   CONSUMER: 'consumer',
   PRODUCER: 'producer',
@@ -51,12 +51,13 @@ export class CollaborationGraph {
 
   getConnectedNodes() {
     return this.connections
-      .filter(conn => {
-        conn.node1.publicKey === this.me.publicKey ||
-          conn.node2.publicKey === this.me.publicKey;
-      })
+      .filter(
+        conn =>
+          conn.node1.publicKey === this.me.publicKey ||
+          conn.node2.publicKey === this.me.publicKey
+      )
       .map(conn =>
-        conn.node1.publicKey === this.me.publicKey ? node2 : node1
+        conn.node1.publicKey === this.me.publicKey ? conn.node2 : conn.node1
       );
   }
 
@@ -73,17 +74,16 @@ export class CollaborationGraph {
   }
 
   removeNode(node) {
-    // Close channel for the peer with matching publicKey
-    node = node ? this.nodes.get(node.publicKey) : node;
-    if (!node) return;
-    node.closeChannel();
-    node.closeSubscriptions();
-    node.connections = this.connections.filter(
+    const existing = node ? this.nodes.get(node.publicKey) : undefined;
+    if (!existing) return;
+    existing.closeChannel();
+    existing.closeSubscriptions();
+    this.connections = this.connections.filter(
       conn =>
-        conn.node1.publicKey !== node.publicKey &&
-        conn.node2.publicKey !== node.publicKey
+        conn.node1.publicKey !== existing.publicKey &&
+        conn.node2.publicKey !== existing.publicKey
     );
-    this.nodes.delete(node.publicKey);
+    this.nodes.delete(existing.publicKey);
   }
 
   addConnection(node1, node2, type, state = 'initiated') {
@@ -171,23 +171,21 @@ export class CollaborationGraph {
     let bestScore = -Infinity;
     let bestNode = null;
 
-    this.nodes
-      .filter(
-        node =>
-          node.publicKey !== this.me.publicKey &&
-          this.countConsumerNodes(node) < node.getMaxAudioOutput() &&
-          !this.myConsumerNode(node) &&
-          !this.refused.some(
-            refusedNode => refusedNode.publicKey === node.publicKey
-          )
-      )
-      .forEach((node, publicKey) => {
-        const score = this.calculateNodeScore(node);
-        if (score > bestScore) {
-          bestScore = score;
-          bestNode = node;
-        }
-      });
+    for (const node of this.nodes.values()) {
+      if (
+        node.publicKey === this.me.publicKey ||
+        this.countConsumerNodes(node) >= node.getMaxAudioOutput() ||
+        this.myConsumerNode(node) ||
+        this.refused.some(r => r.publicKey === node.publicKey)
+      ) {
+        continue;
+      }
+      const score = this.calculateNodeScore(node);
+      if (score > bestScore) {
+        bestScore = score;
+        bestNode = node;
+      }
+    }
     return bestNode;
   }
 
@@ -195,17 +193,18 @@ export class CollaborationGraph {
     const proximityScore = this.calculateProximityScore(node);
     const networkScore = this.calculateNetworkScore(node);
     const loadScore = this.calculateLoadScore(node);
-    return (me.isSpeaker || me.isCoHost || me.isHost) &&
+    return (this.me.isSpeaker || this.me.isCoHost || this.me.isHost) &&
       (node.isSpeaker || node.isCoHost || node.isHost)
       ? 1
-      : proximityScore * this.distanceScoreWeight +
+      :
+          proximityScore * this.distanceScoreWeight +
           networkScore * this.speedScoreWeight +
           loadScore * this.loadScoreWeight;
   }
 
   calculateProximityScore(node) {
-    depth = this.calculateDepth();
-    distance = this.calculateDistance(node);
+    const depth = this.calculateDepth();
+    const distance = this.calculateDistance(node);
     return (depth - distance) / depth;
   }
 
@@ -354,28 +353,33 @@ export class CollaborationGraph {
   }
 
   getWorstChild() {
-    const childNodes = this.connections.filter(
-      conn =>
-        (conn.node2.publicKey === this.me.publicKey &&
-          conn.type === CONNECTION_TYPE.CONSUMER &&
-          !conn.node1.isHost &&
-          !conn.node1.isCoHost &&
-          !conn.node1.isSpeaker) ||
-        (conn.node1.publicKey === this.me.publicKey &&
-          conn.type === CONNECTION_TYPE.PRODUCER &&
-          !conn.node2.isHost &&
-          !conn.node2.isCoHost &&
-          !conn.node2.isSpeaker)
-    );
-    const worstScore = Infinity;
-    const worstNode = null;
-    for (child of childNodes) {
-      const score = this.calculateNodeScore(child);
+    const childNodes = this.connections
+      .filter(
+        conn =>
+          (conn.node2.publicKey === this.me.publicKey &&
+            conn.type === CONNECTION_TYPE.CONSUMER &&
+            !conn.node1.isHost &&
+            !conn.node1.isCoHost &&
+            !conn.node1.isSpeaker) ||
+          (conn.node1.publicKey === this.me.publicKey &&
+            conn.type === CONNECTION_TYPE.PRODUCER &&
+            !conn.node2.isHost &&
+            !conn.node2.isCoHost &&
+            !conn.node2.isSpeaker)
+      )
+      .map(conn =>
+        conn.node2.publicKey === this.me.publicKey ? conn.node1 : conn.node2
+      );
+
+    let worstScore = Infinity;
+    let worstNode = null;
+    for (const node of childNodes) {
+      const score = this.calculateNodeScore(node);
       if (score < worstScore) {
         worstScore = score;
-        worstNode = child;
+        worstNode = node;
       }
-      return [worstNode, worstScore];
     }
+    return [worstNode, worstScore];
   }
 }

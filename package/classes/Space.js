@@ -36,9 +36,8 @@ export class Space {
     this.id = id;
     this.name = name;
     this.host = host;
-    this.me;
-    this.coHosts = coHosts;
-    this.imCoHosting = imCoHosting;
+    this.me = me;
+    this.coHosts = coHosts || [];
     this.optimumUploadSpeedKbps = optimumUploadSpeedKbps;
     this.optimumDownloadSpeedKbps = optimumDownloadSpeedKbps;
     this.distanceScoreWeight = distanceScoreWeight;
@@ -62,7 +61,8 @@ export class Space {
   }
 
   prepareSpace() {
-    // TODO raise exception if host or me are empty
+    if (!this.host || !this.me)
+      throw new Error('Space host and current user must be defined');
     this.collaborationGraph = new CollaborationGraph(
       this.host,
       this.me,
@@ -87,8 +87,9 @@ export class Space {
     if (node) {
       node.initConnection();
       node.reserveConnection();
+    } else {
+      console.warn('No suitable peer found to join the space');
     }
-    // TODO: handle the case where there is no bestFit
   }
 
   hasPeer(peer) {
@@ -104,7 +105,9 @@ export class Space {
   }
 
   toggleMuteSpace() {
-    this.collaborationGraph.getConnectedNodes().muteNodes();
+    this.collaborationGraph
+      .getConnectedNodes()
+      .forEach(node => node.toggleMute && node.toggleMute());
   }
 
   endSpace() {
@@ -162,20 +165,23 @@ export class Space {
   }
 
   disconnectPeer(peer) {
-    peer = this.collaborationGraph.getNode(peer);
-    peer.closeChannel();
-    this.collaborationGraph.removeConnection(peer, me);
+    const node = this.collaborationGraph.getNode(
+      peer.publicKey ? peer.publicKey : peer
+    );
+    if (!node) return;
+    node.closeChannel();
+    this.collaborationGraph.removeConnection(node, this.me);
   }
 
   acceptPeerConnection(peer, type, state) {
-    this.addConnection(node1, node2, type, 'accepted');
+    this.addConnection(this.me, peer, type, 'accepted');
     peer.initConnection();
   }
 
   broadcastTrack(node, event, remoteStream) {
     this.collaborationGraph
       .getBroadCastNodes()
-      .foreach(peer => peer.transmitTrack(node, event, remoteStream));
+      .forEach(peer => peer.transmitTrack(node, event, remoteStream));
   }
 
   closeSubscriptions() {
