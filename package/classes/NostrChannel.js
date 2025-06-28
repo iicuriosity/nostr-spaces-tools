@@ -173,7 +173,6 @@ class NostrChannel {
     this.subscriptionClosers.push(
       this._subscribe({
         onevent: event => {
-          // TODO:: Read content And construct the event.
           const { id, name, host, coHosts } = JSON.parse(event.content);
           if (event.pubkey !== host.publicKey) return;
           const space = new Space(
@@ -765,7 +764,6 @@ class NostrChannel {
       this._subscribe({
         onevent: event => {
           const { sdp } = JSON.parse(event.content);
-          // todo decrypt the offer using the peer's public key
           peer.acceptOffer(sdp);
         },
         filters: [
@@ -815,7 +813,6 @@ class NostrChannel {
       this._subscribe({
         onevent: event => {
           const { sdp } = JSON.parse(event.content);
-          // TODO decrypt the offer using the peer's public key
           peer.handleAnswer(sdp);
         },
         filters: [

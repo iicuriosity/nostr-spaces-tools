@@ -3,13 +3,18 @@
   "version": "0.1.0",
   "description": "An Innovative framework for decentralized, real-time audio communication. This package uses WebRTC & Nostr for secure, scalable P2P connections. Ideal for allowing nostr client devs to add Twitter/X like audio spaces features.",
   "main": "index.js",
+  "type": "module",
   "dependencies": {
     "nostr-tools": "^2.1.5",
     "typescript": "^5.0.2",
     "web-vitals": "^2.1.4"
   },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --experimental-vm-modules ./node_modules/.bin/jest",
+    "build": "tsc"
   },
   "repository": {
     "type": "git",

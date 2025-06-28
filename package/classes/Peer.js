@@ -75,7 +75,7 @@ export class Peer {
       if (
         this.lastPeerConnectionState === 'new' &&
         this.peerConnection.connectionState === 'connecting' &&
-        clientMember
+        this.clientPeer
       ) {
         this.onAudioClientConnection();
         //else if (this.peerConnection.connectionState === 'connected') {
@@ -180,16 +180,15 @@ export class Peer {
   }
 
   getMaxAudioOutput() {
-    //TODO
     return this.networkMetrics.maxAudioOutputs;
   }
 
   getUploadSpeedInKbps() {
-    return this.networkMetrics.downloadSpeedKbps;
+    return this.networkMetrics.uploadSpeedKbps;
   }
 
   addSubscriptionCloser(subscriptionCloser) {
-    this.subscriptionClosers.push(subscriptionClosers);
+    this.subscriptionClosers.push(subscriptionCloser);
   }
 
   closeSubscriptions() {
