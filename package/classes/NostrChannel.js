@@ -1,9 +1,9 @@
 /**
  * NostrChannel is a singleton class that handles the communication
  */
-import { Peer } from './Peer';
-import { Space } from './Space';
-import { extractNetworkMetrics } from '../utility/NetworkMetricsExtractor';
+import { Peer } from './Peer.js';
+import { Space } from './Space.js';
+import { extractNetworkMetrics } from '../utility/NetworkMetricsExtractor.js';
 import {
   SimplePool,
   Event,

@@ -3,3 +3,16 @@
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## Load Testing
+
+The helper script `scripts/load-test.js` now uses Node's worker threads to mimic
+multiple peers connecting concurrently. Run it from the repository root using:
+
+```bash
+node scripts/load-test.js [numPeers] [numWorkers]
+```
+
+`numPeers` sets how many peers to simulate (default `100`). `numWorkers`
+determines how many worker threads perform the simulation (default `4`). The
+output lists the best peer selected by each worker along with aggregated memory
+and CPU statistics.
