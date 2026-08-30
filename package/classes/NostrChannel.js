@@ -6,7 +6,6 @@ import { Space } from './Space.js';
 import { extractNetworkMetrics } from '../utility/NetworkMetricsExtractor.js';
 import {
   SimplePool,
-  Event,
   generateSecretKey,
   getPublicKey,
   finalizeEvent,
@@ -76,12 +75,30 @@ class NostrChannel {
 
   async _subscribe({ filters, onevent }) {
     this._verifyChannelSetup();
-    return this.pool.subscribeMany(this.relays, filters, { onevent });
+    // SimplePool.subscribeMany (nostr-tools v2) requires an *array* of
+    // filters: Subscription.fire() builds the REQ as
+    // JSON.stringify(filters).substring(1), which only yields valid NIP-01
+    // when filters is an array. A single object gets its opening brace
+    // stripped, producing e.g. `["REQ","sub:1","kinds":[...]}` which relays
+    // reject with "could not parse command" -- silently breaking every live
+    // subscription (join/reserve/offer/answer/ICE).
+    const filterList = Array.isArray(filters) ? filters : [filters];
+    return this.pool.subscribeMany(this.relays, filterList, { onevent });
   }
 
-  async _queryEvents({ filters: [{}] }) {
+  async _queryEvents({ filters }) {
     this._verifyChannelSetup();
-    return this.pool.querySync(this.relays, filters);
+    // SimplePool.querySync (nostr-tools v2) takes a single filter object and
+    // wraps it in an array internally, so an array argument would be
+    // double-wrapped. Query each filter separately and merge the results,
+    // deduping by event id.
+    const filterList = Array.isArray(filters) ? filters : [filters];
+    const results = await Promise.all(
+      filterList.map((f) => this.pool.querySync(this.relays, f))
+    );
+    const byId = new Map();
+    for (const events of results) for (const e of events) byId.set(e.id, e);
+    return [...byId.values()];
   }
 
   /** sendOffer constructs an offer event and broadcasts it to the nostr relay
